@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/gjtiquia/txt2ig/internal/cli"
 	"github.com/gjtiquia/txt2ig/internal/config"
+	"github.com/gjtiquia/txt2ig/internal/renderer"
 )
 
 func main() {
@@ -28,15 +30,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	// TODO: Implement the rest of the pipeline
-	// 1. Read input file
-	// 2. Run pre-processors
-	// 3. Load fonts
-	// 4. Render image
-	// 5. Run post-processors
-	// 6. Save output
+	// Determine output path
+	outputPath := renderer.DetermineOutputPath(cliArgs.InputFile, cliArgs.Output)
 
-	fmt.Printf("Input: %s\n", cliArgs.InputFile)
-	fmt.Printf("Output: %s\n", cliArgs.Output)
-	fmt.Printf("Config: %+v\n", cfg)
+	// Create renderer
+	r := renderer.NewRenderer(cfg)
+	defer r.Close()
+
+	// Render the image
+	fmt.Printf("Converting %s to %s...\n", filepath.Base(cliArgs.InputFile), filepath.Base(outputPath))
+	if err := r.Render(cliArgs.InputFile, outputPath); err != nil {
+		fmt.Fprintf(os.Stderr, "Error rendering: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Successfully created %s\n", outputPath)
 }

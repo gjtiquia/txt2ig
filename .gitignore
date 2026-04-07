@@ -30,3 +30,9 @@ go.work.sum
 # OS
 .DS_Store
 Thumbs.db
+
+# Test output files
+test-*.jpg
+test-*.png
+test-*.jsonc
+test-*.md

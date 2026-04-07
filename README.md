@@ -9,13 +9,13 @@ meant to be dead simple, minimal config
 ```bash
 # basic usage
 # searches for my-post.md on the same directory
-# if exists, creates my-post.jpg (we only support .jpg for now)
+# if exists, creates my-post.jpg (supports .jpg and .png)
 txt2ig my-post.md
 
 # output flag
 # set the output file name
-# (will error if output does not end in .jpg)
-txt2ig my-post.md -o another-name.jpg
+# (supports .jpg and .png extensions)
+txt2ig my-post.md -o another-name.png
 
 # supports any plain text file
 # supports relative and absolute paths
@@ -51,12 +51,13 @@ feel free to copy and paste this to your own config and override what you need
 ```jsonc
 {
     // target font and fallback fonts
-    "font": ["FiraMono Nerd Font Mono", "mono"],
+    // supports font names and file paths: ["FiraMono", "/path/to/custom.ttf", "mono"]
+    "font": ["GoMono"],
     // unit: px
     "fontSize": 18,
-    "fontColor": "#FFFFFF"
-    "bgColor": "#000000"
-    // text x-axis postion within the text box
+    "fontColor": "#FFFFFF",
+    "bgColor": "#000000",
+    // text x-axis position within the text box
     "textJustify": "left", // "center", "right"
     // text box (bounding box of text) x-axis position on screen
     "textBoxJustify": "center", // "left", "right"
@@ -64,44 +65,60 @@ feel free to copy and paste this to your own config and override what you need
     "textBoxAlign": "center", // "top", "bottom"
     // text box (bounding box of text) (x, y) offset. unit: px
     "textBoxOffset": [0, 0],
-    // (x, y). unit: px
-    "screenSize": [1080. 1920],
+    // maximum width for text box. unit: px. 0 = auto (90% of screen width)
+    "textBoxMaxWidth": 972,
+    // screen/canvas size. [width, height]. unit: px
+    "screenSize": [1080, 1920],
+    // enable automatic text wrapping
+    "textWrap": true,
+    // line height multiplier (1.4 = 1.4x font size)
+    "lineHeight": 1.4,
 
     // processors will run in sequence, 
     // you may chain several processors of the same name to get different results if you so desire
 
     // typically pre-process text
     "preProcessors": [
-        // "exactSearchAndReplace": {
-        //     "searchString": "apple", // exact match only
-        //     "replaceString": "bananas",
-        // },
-
-        // "grepSearchAndReplace": {
-        //     "pattern": "^@foo",
-        //     "replaceString": "bar",
+        // {
+        //     "exactSearchAndReplace": {
+        //         "searchString": "apple", // exact match only
+        //         "replaceString": "bananas",
+        //     }
         // }
 
-        // "exactSearchAndReplaceWithDateTimeNow": {
-        //     "searchString": "@date",
-        //     "replaceFormat": "yyyy-mm-dd", // supports yyyy, mm, dd, hh, mm, ss
-        // },
+        // {
+        //     "grepSearchAndReplace": {
+        //         "pattern": "^@foo",
+        //         "replaceString": "bar",
+        //     }
+        // }
+
+        // {
+        //     "exactSearchAndReplaceWithDateTimeNow": {
+        //         "searchString": "@date",
+        //         "replaceFormat": "yyyy-mm-dd", // supports yyyy, mm, dd, hh, mm, ss
+        //     }
+        // }
     ],
 
     // typically post-process styling
     "postProcessors": [
-        // lines starting with # will be bold
-        "markdown-bold-headers": {
-            "bold": true,
-            // set to empty to use the same default color
-            // "fontColor": "#EC9006" // orange
-        },
+        {
+            // lines starting with # will be bold
+            "markdown-bold-headers": {
+                "bold": true,
+                // set to empty to use the same default color
+                // "fontColor": "#EC9006" // orange
+            }
+        }
 
-        // lines starting with # will be italic and different color
-        // "bash-comments": {
-        //     "italic": true,
-        //     "fontColor": "#CCCCCC" // gray
-        // },
+        // {
+        //      // lines starting with # will be italic and different color
+        //     "bash-comments": {
+        //         "italic": true,
+        //         "fontColor": "#CCCCCC" // gray
+        //     }
+        // }
     ],
 }
 ```

@@ -14,7 +14,8 @@ type ConvertCmd struct {
 }
 
 type WebCmd struct {
-	Port int `short:"p" long:"port" help:"Port to run server on" default:"3000"`
+	Port  int    `short:"p" long:"port" help:"Port to run server on" default:"3000"`
+	Watch string `short:"w" long:"watch" help:"File to watch for changes" type:"existingfile"`
 }
 
 func Parse(args []string) (*CLI, error) {

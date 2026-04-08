@@ -54,6 +54,9 @@ func runConvert(cmd *cli.ConvertCmd) {
 
 func runWeb(cmd *cli.WebCmd) {
 	server := web.NewServer()
+	if cmd.Watch != "" {
+		server = server.WithWatch(cmd.Watch)
+	}
 	if err := server.Run(cmd.Port); err != nil {
 		fmt.Fprintf(os.Stderr, "Error starting web server: %v\n", err)
 		os.Exit(1)

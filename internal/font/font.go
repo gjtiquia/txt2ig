@@ -7,6 +7,9 @@ import (
 
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/gomono"
+	"golang.org/x/image/font/gofont/gomonobold"
+	"golang.org/x/image/font/gofont/gomonobolditalic"
+	"golang.org/x/image/font/gofont/gomonoitalic"
 	"golang.org/x/image/font/opentype"
 )
 
@@ -155,6 +158,39 @@ func (m *Manager) loadGoMono(size float64, dpi float64) (font.Face, error) {
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create GoMono font face: %w", err)
+	}
+
+	return face, nil
+}
+
+func (m *Manager) loadEmbeddedFont(name string, size float64, dpi float64) (font.Face, error) {
+	var fontData []byte
+
+	switch name {
+	case "GoMono":
+		fontData = gomono.TTF
+	case "GoMonoBold":
+		fontData = gomonobold.TTF
+	case "GoMonoItalic":
+		fontData = gomonoitalic.TTF
+	case "GoMonoBoldItalic":
+		fontData = gomonobolditalic.TTF
+	default:
+		return nil, fmt.Errorf("unknown embedded font: %s", name)
+	}
+
+	f, err := opentype.Parse(fontData)
+	if err != nil {
+		return nil, fmt.Errorf("parse embedded font %s: %w", name, err)
+	}
+
+	face, err := opentype.NewFace(f, &opentype.FaceOptions{
+		Size:    size,
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create font face for %s: %w", name, err)
 	}
 
 	return face, nil

@@ -11,13 +11,12 @@ type MarkdownBoldHeaders struct {
 
 func (p *MarkdownBoldHeaders) Process(line string) (string, *TextStyle, error) {
 	if strings.HasPrefix(line, "#") {
-		// Remove leading # characters
-		cleanedLine := strings.TrimLeft(line, "# ")
+		// Keep the # in the text, just apply styling
 		style := &TextStyle{
 			Bold:      p.Bold,
 			FontColor: p.FontColor,
 		}
-		return cleanedLine, style, nil
+		return line, style, nil
 	}
 	return line, nil, nil
 }

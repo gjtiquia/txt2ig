@@ -19,7 +19,7 @@ func TestMarkdownBoldHeaders(t *testing.T) {
 			bold:          true,
 			fontColor:     "#FF0000",
 			input:         "# Title",
-			expectedLine:  "Title",
+			expectedLine:  "# Title", // # is kept
 			expectedBold:  true,
 			expectedColor: "#FF0000",
 		},
@@ -28,7 +28,7 @@ func TestMarkdownBoldHeaders(t *testing.T) {
 			bold:          true,
 			fontColor:     "",
 			input:         "## Heading",
-			expectedLine:  "Heading",
+			expectedLine:  "## Heading", // # is kept
 			expectedBold:  true,
 			expectedColor: "",
 		},
@@ -37,7 +37,7 @@ func TestMarkdownBoldHeaders(t *testing.T) {
 			bold:          false,
 			fontColor:     "#00FF00",
 			input:         "### Subheading",
-			expectedLine:  "Subheading",
+			expectedLine:  "### Subheading", // # is kept
 			expectedBold:  false,
 			expectedColor: "#00FF00",
 		},
@@ -51,20 +51,20 @@ func TestMarkdownBoldHeaders(t *testing.T) {
 			expectedColor: "",
 		},
 		{
-			name:          "header with spaces",
+			name:          "header with spaces after hash",
 			bold:          true,
 			fontColor:     "",
 			input:         "#   Heading with spaces",
-			expectedLine:  "Heading with spaces",
+			expectedLine:  "#   Heading with spaces", // # is kept
 			expectedBold:  true,
 			expectedColor: "",
 		},
 		{
-			name:          "empty after hash",
+			name:          "just hash",
 			bold:          true,
 			fontColor:     "#000000",
 			input:         "#",
-			expectedLine:  "",
+			expectedLine:  "#",
 			expectedBold:  true,
 			expectedColor: "#000000",
 		},

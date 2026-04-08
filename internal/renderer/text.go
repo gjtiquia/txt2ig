@@ -10,6 +10,7 @@ import (
 
 	"github.com/gjtiquia/txt2ig/internal/config"
 	txtfont "github.com/gjtiquia/txt2ig/internal/font"
+	"github.com/gjtiquia/txt2ig/internal/processor"
 )
 
 type TextRenderer struct {
@@ -139,22 +140,20 @@ func (r *TextRenderer) CalculateTextBoxPosition(textWidth, textHeight int) (x, y
 	return x, y
 }
 
-func (r *TextRenderer) DrawText(img *image.RGBA, lines []string) error {
+func (r *TextRenderer) DrawText(img *image.RGBA, styledLines []processor.StyledLine) error {
+	lines := make([]string, len(styledLines))
+	for i, sl := range styledLines {
+		lines[i] = sl.Text
+	}
+
 	textWidth, textHeight := r.CalculateTextBoxSize(lines)
 	startX, startY := r.CalculateTextBoxPosition(textWidth, textHeight)
 
-	drawer := &font.Drawer{
-		Dst:  img,
-		Src:  image.NewUniform(r.fontColor),
-		Face: r.face,
-	}
-
-	for i, line := range lines {
+	for i, sl := range styledLines {
 		y := startY + (i+1)*r.lineHeight - r.lineHeight/4
 
-		lineWidth := txtfont.MeasureTextWidth(r.face, line)
+		lineWidth := txtfont.MeasureTextWidth(r.face, sl.Text)
 
-		// Apply text justification within the text box
 		var x int
 		switch r.config.TextJustify {
 		case "left":
@@ -167,11 +166,24 @@ func (r *TextRenderer) DrawText(img *image.RGBA, lines []string) error {
 			x = startX
 		}
 
-		drawer.Dot = fixed.Point26_6{
-			X: fixed.Int26_6(x << 6),
-			Y: fixed.Int26_6(y << 6),
+		lineColor := r.fontColor
+		if sl.Style != nil && sl.Style.FontColor != "" {
+			customColor, err := txtfont.ParseColor(sl.Style.FontColor)
+			if err == nil {
+				lineColor = customColor
+			}
 		}
-		drawer.DrawString(line)
+
+		drawer := &font.Drawer{
+			Dst:  img,
+			Src:  image.NewUniform(lineColor),
+			Face: r.face,
+			Dot: fixed.Point26_6{
+				X: fixed.Int26_6(x << 6),
+				Y: fixed.Int26_6(y << 6),
+			},
+		}
+		drawer.DrawString(sl.Text)
 	}
 
 	return nil

@@ -22,6 +22,11 @@ type TextStyle struct {
 	Size      *int
 }
 
+type StyledLine struct {
+	Text  string
+	Style *TextStyle
+}
+
 type ProcessorRegistry struct {
 	preProcessors  map[string]PreProcessor
 	postProcessors map[string]PostProcessor
@@ -69,26 +74,70 @@ func ApplyPreProcessors(text string, configs []interface{}) (string, error) {
 	return result, nil
 }
 
-func ApplyPostProcessors(lines []string, configs []interface{}) ([]string, error) {
+func ApplyPostProcessors(lines []string, configs []interface{}) ([]StyledLine, error) {
 	processors, err := ParsePostProcessorConfigs(configs)
 	if err != nil {
 		return nil, err
 	}
 
-	result := lines
-	for i, p := range processors {
-		newLines := make([]string, 0, len(result))
-		for _, line := range result {
-			processedLine, _, err := p.Process(line)
+	result := make([]StyledLine, 0, len(lines))
+	for _, line := range lines {
+		// Start with no style
+		var currentStyle *TextStyle
+
+		// Apply each processor in sequence
+		processedLine := line
+		for _, p := range processors {
+			var style *TextStyle
+			processedLine, style, err = p.Process(processedLine)
 			if err != nil {
-				return nil, fmt.Errorf("apply post-processor %d (%s): %w", i, p.Name(), err)
+				return nil, fmt.Errorf("apply post-processor: %w", err)
 			}
-			newLines = append(newLines, processedLine)
+			// Merge styles (later processors override earlier ones)
+			if style != nil {
+				currentStyle = mergeStyles(currentStyle, style)
+			}
 		}
-		result = newLines
+
+		result = append(result, StyledLine{
+			Text:  processedLine,
+			Style: currentStyle,
+		})
 	}
 
 	return result, nil
+}
+
+func mergeStyles(base, override *TextStyle) *TextStyle {
+	if base == nil {
+		return override
+	}
+	if override == nil {
+		return base
+	}
+
+	// Create a merged style, with override taking precedence
+	merged := &TextStyle{
+		Bold:      base.Bold || override.Bold,
+		Italic:    base.Italic || override.Italic,
+		Underline: base.Underline || override.Underline,
+	}
+
+	// FontColor: override takes precedence if set
+	if override.FontColor != "" {
+		merged.FontColor = override.FontColor
+	} else {
+		merged.FontColor = base.FontColor
+	}
+
+	// Size: override takes precedence if set
+	if override.Size != nil {
+		merged.Size = override.Size
+	} else {
+		merged.Size = base.Size
+	}
+
+	return merged
 }
 
 func ParsePreProcessorConfig(config interface{}) (PreProcessor, error) {

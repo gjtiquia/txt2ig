@@ -157,7 +157,7 @@ feel free to copy and paste this to your own config and override what you need
                 // set to empty to use the same default color
                 // "fontColor": "#EC9006" // orange
             }
-        }
+        },
 
         // {
         //      // lines starting with # will be italic and different color
@@ -167,13 +167,13 @@ feel free to copy and paste this to your own config and override what you need
         //     }
         // }
 
-        // {
-        //     // highlights bash code blocks with Chroma syntax highlighting
-        //     "bash-code-highlighting": {
-        //         "style": "monokai", // Chroma style (monokai, dracula, github, etc.)
-        //         "defaultColor": "#FFFFFF" // fallback color when Chroma doesn't provide one
-        //     }
-        // }
+        {
+            // highlights bash code blocks with Chroma syntax highlighting
+            "bash-code-highlighting": {
+                "style": "monokai", // Chroma style (monokai, dracula, github, etc.)
+                "defaultColor": "#FFFFFF" // fallback color when Chroma doesn't provide one
+            }
+        },
     ],
 }
 ```
@@ -273,6 +273,20 @@ GOOS=windows GOARCH=amd64 go build -o txt2ig.exe
 ```
 
 ## future roadmap
+
+### serve tool on the web
+
+- designed for use on mobile, especially since workflow should be posting on instagram via mobile, so should be mobile centric
+- SSR web page
+- web page has a text area to type/paste text
+- web page has default config (from README) pasted in a text area, free to edit (eg. edit font size, processors etc.)
+- on press submit, it server side validates the params (especially the config) and returns relevant errors if any (exactly same as CLI)
+- if all ok, generates the image and returns the image for users to download
+
+```bash
+# spins up web server, on port 3000, serves web app for running txt2ig
+txt2ig web --port 3000
+```
 
 ### hot-reload file watching preview support
 

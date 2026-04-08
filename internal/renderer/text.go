@@ -168,20 +168,28 @@ func (r *TextRenderer) selectFace(style *processor.TextStyle) font.Face {
 	return r.fontFamily.Regular
 }
 
+func (r *TextRenderer) calculateLineSegmentsWidth(segments []processor.StyledSegment) int {
+	totalWidth := 0
+	for _, segment := range segments {
+		face := r.selectFace(segment.Style)
+		totalWidth += txtfont.MeasureTextWidth(face, segment.Text)
+	}
+	return totalWidth
+}
+
 func (r *TextRenderer) DrawText(img *image.RGBA, styledLines []processor.StyledLine) error {
 	lines := make([]string, len(styledLines))
 	for i, sl := range styledLines {
-		lines[i] = sl.Text
+		lines[i] = processor.StyledSegmentsToText(sl.Segments)
 	}
 
 	textWidth, textHeight := r.CalculateTextBoxSize(lines)
 	startX, startY := r.CalculateTextBoxPosition(textWidth, textHeight)
 
-	for i, sl := range styledLines {
+	for i, styledLine := range styledLines {
 		y := startY + (i+1)*r.lineHeight - r.lineHeight/4
 
-		face := r.selectFace(sl.Style)
-		lineWidth := txtfont.MeasureTextWidth(face, sl.Text)
+		lineWidth := r.calculateLineSegmentsWidth(styledLine.Segments)
 
 		var x int
 		switch r.config.TextJustify {
@@ -195,24 +203,35 @@ func (r *TextRenderer) DrawText(img *image.RGBA, styledLines []processor.StyledL
 			x = startX
 		}
 
-		lineColor := r.fontColor
-		if sl.Style != nil && sl.Style.FontColor != "" {
-			customColor, err := txtfont.ParseColor(sl.Style.FontColor)
-			if err == nil {
-				lineColor = customColor
+		for _, segment := range styledLine.Segments {
+			if segment.Text == "" {
+				continue
 			}
-		}
 
-		drawer := &font.Drawer{
-			Dst:  img,
-			Src:  image.NewUniform(lineColor),
-			Face: face,
-			Dot: fixed.Point26_6{
-				X: fixed.Int26_6(x << 6),
-				Y: fixed.Int26_6(y << 6),
-			},
+			lineColor := r.fontColor
+			if segment.Style != nil && segment.Style.FontColor != "" {
+				customColor, err := txtfont.ParseColor(segment.Style.FontColor)
+				if err == nil {
+					lineColor = customColor
+				}
+			}
+
+			face := r.selectFace(segment.Style)
+
+			drawer := &font.Drawer{
+				Dst:  img,
+				Src:  image.NewUniform(lineColor),
+				Face: face,
+				Dot: fixed.Point26_6{
+					X: fixed.Int26_6(x << 6),
+					Y: fixed.Int26_6(y << 6),
+				},
+			}
+			drawer.DrawString(segment.Text)
+
+			segmentWidth := txtfont.MeasureTextWidth(face, segment.Text)
+			x += segmentWidth
 		}
-		drawer.DrawString(sl.Text)
 	}
 
 	return nil

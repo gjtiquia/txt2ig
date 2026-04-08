@@ -6,6 +6,7 @@ import (
 
 	"github.com/gjtiquia/txt2ig/internal/config"
 	txtfont "github.com/gjtiquia/txt2ig/internal/font"
+	"github.com/gjtiquia/txt2ig/internal/processor"
 
 	"golang.org/x/image/font"
 )
@@ -29,40 +30,52 @@ func (r *Renderer) Render(inputPath, outputPath string) error {
 		return fmt.Errorf("read input file %s: %w", inputPath, err)
 	}
 
-	// 2. Load font
+	// 2. Apply pre-processors
+	processedText, err := processor.ApplyPreProcessors(string(text), r.config.PreProcessors)
+	if err != nil {
+		return fmt.Errorf("apply pre-processors: %w", err)
+	}
+
+	// 3. Load font
 	face, err := r.fontManager.LoadFontWithFallback(r.config.Font, float64(r.config.FontSize), 72)
 	if err != nil {
 		return fmt.Errorf("load font: %w", err)
 	}
 
-	// 3. Create image renderer
+	// 4. Create image renderer
 	imgRenderer, err := NewImageRenderer(r.config.ScreenSize[0], r.config.ScreenSize[1], r.config.BgColor)
 	if err != nil {
 		return fmt.Errorf("create image renderer: %w", err)
 	}
 
-	// 4. Create canvas
+	// 5. Create canvas
 	img := imgRenderer.CreateCanvas()
 
-	// 5. Create text renderer
+	// 6. Create text renderer
 	textRenderer, err := NewTextRenderer(face, r.config)
 	if err != nil {
 		return fmt.Errorf("create text renderer: %w", err)
 	}
 
-	// 6. Wrap text
+	// 7. Wrap text
 	maxWidth := r.config.TextBoxMaxWidth
 	if maxWidth == 0 {
 		maxWidth = int(float64(r.config.ScreenSize[0]) * 0.9)
 	}
-	lines := textRenderer.WrapText(string(text), maxWidth)
+	lines := textRenderer.WrapText(processedText, maxWidth)
 
-	// 7. Draw text
-	if err := textRenderer.DrawText(img, lines); err != nil {
+	// 8. Apply post-processors
+	processedLines, err := processor.ApplyPostProcessors(lines, r.config.PostProcessors)
+	if err != nil {
+		return fmt.Errorf("apply post-processors: %w", err)
+	}
+
+	// 9. Draw text
+	if err := textRenderer.DrawText(img, processedLines); err != nil {
 		return fmt.Errorf("draw text: %w", err)
 	}
 
-	// 8. Save image
+	// 10. Save image
 	if err := SaveImage(img, outputPath); err != nil {
 		return fmt.Errorf("save image: %w", err)
 	}
@@ -71,8 +84,18 @@ func (r *Renderer) Render(inputPath, outputPath string) error {
 }
 
 func (r *Renderer) RenderWithProcessors(inputPath, outputPath string, preProcessors, postProcessors []interface{}) error {
-	// TODO: Implement processor pipeline
-	// For now, just call the basic render
+	// Override config processors if provided
+	if len(preProcessors) > 0 {
+		oldPre := r.config.PreProcessors
+		r.config.PreProcessors = preProcessors
+		defer func() { r.config.PreProcessors = oldPre }()
+	}
+	if len(postProcessors) > 0 {
+		oldPost := r.config.PostProcessors
+		r.config.PostProcessors = postProcessors
+		defer func() { r.config.PostProcessors = oldPost }()
+	}
+
 	return r.Render(inputPath, outputPath)
 }
 

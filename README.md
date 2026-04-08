@@ -1,5 +1,7 @@
 # txt2ig
 
+![test-bash](https://github.com/user-attachments/assets/ab3b3dda-50e4-4814-9115-426b55fc39ab)
+
 a cli tool to convert text files to images with plain text, ready for posting to instagram
 
 meant to be dead simple, intuitive config

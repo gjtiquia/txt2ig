@@ -166,6 +166,14 @@ feel free to copy and paste this to your own config and override what you need
         //         "fontColor": "#CCCCCC" // gray
         //     }
         // }
+
+        // {
+        //     // highlights bash code blocks with Chroma syntax highlighting
+        //     "bash-code-highlighting": {
+        //         "style": "monokai", // Chroma style (monokai, dracula, github, etc.)
+        //         "defaultColor": "#FFFFFF" // fallback color when Chroma doesn't provide one
+        //     }
+        // }
     ],
 }
 ```

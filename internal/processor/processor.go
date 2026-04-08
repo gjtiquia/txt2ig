@@ -14,6 +14,11 @@ type PostProcessor interface {
 	Name() string
 }
 
+type StatefulPostProcessor interface {
+	PostProcessor
+	ProcessLines(lines []StyledLine) ([]StyledLine, error)
+}
+
 type TextStyle struct {
 	Bold      bool
 	Italic    bool
@@ -80,32 +85,54 @@ func ApplyPostProcessors(lines []string, configs []interface{}) ([]StyledLine, e
 		return nil, err
 	}
 
-	result := make([]StyledLine, 0, len(lines))
-	for _, line := range lines {
-		// Start with no style
-		var currentStyle *TextStyle
+	result := make([]StyledLine, len(lines))
+	for i, line := range lines {
+		result[i] = StyledLine{Text: line, Style: nil}
+	}
 
-		// Apply each processor in sequence
-		processedLine := line
+	for _, p := range processors {
+		if sp, ok := p.(StatefulPostProcessor); ok {
+			result, err = sp.ProcessLines(result)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	for i := range result {
+		if hasNonDefaultStyle(result[i].Style) {
+			continue
+		}
+
+		var currentStyle *TextStyle
+		processedLine := result[i].Text
+
 		for _, p := range processors {
+			if _, ok := p.(StatefulPostProcessor); ok {
+				continue
+			}
+
 			var style *TextStyle
 			processedLine, style, err = p.Process(processedLine)
 			if err != nil {
 				return nil, fmt.Errorf("apply post-processor: %w", err)
 			}
-			// Merge styles (later processors override earlier ones)
 			if style != nil {
 				currentStyle = mergeStyles(currentStyle, style)
 			}
 		}
 
-		result = append(result, StyledLine{
-			Text:  processedLine,
-			Style: currentStyle,
-		})
+		result[i] = StyledLine{Text: processedLine, Style: currentStyle}
 	}
 
 	return result, nil
+}
+
+func hasNonDefaultStyle(style *TextStyle) bool {
+	if style == nil {
+		return false
+	}
+	return style.FontColor != "" || style.Bold || style.Italic || style.Underline || style.Size != nil
 }
 
 func mergeStyles(base, override *TextStyle) *TextStyle {
@@ -225,6 +252,10 @@ func ParsePostProcessorConfig(config interface{}) (PostProcessor, error) {
 		return parseBashComments(bashComments)
 	}
 
+	if bashHighlight, ok := configMap["bash-code-highlighting"]; ok {
+		return parseBashCodeHighlighting(bashHighlight)
+	}
+
 	// Unknown processor type
 	for k := range configMap {
 		return nil, fmt.Errorf("unknown post-processor: %s", k)
@@ -273,6 +304,34 @@ func parseBashComments(config interface{}) (*BashComments, error) {
 		p.FontColor, ok = fontColor.(string)
 		if !ok {
 			return nil, fmt.Errorf("fontColor must be a string")
+		}
+	}
+
+	return p, nil
+}
+
+func parseBashCodeHighlighting(config interface{}) (*BashCodeHighlighter, error) {
+	configMap, ok := config.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("bash-code-highlighting config must be an object")
+	}
+
+	p := &BashCodeHighlighter{
+		StyleName:    "monokai",
+		DefaultColor: "#FFFFFF",
+	}
+
+	if style, ok := configMap["style"]; ok {
+		p.StyleName, ok = style.(string)
+		if !ok {
+			return nil, fmt.Errorf("style must be a string")
+		}
+	}
+
+	if defaultColor, ok := configMap["defaultColor"]; ok {
+		p.DefaultColor, ok = defaultColor.(string)
+		if !ok {
+			return nil, fmt.Errorf("defaultColor must be a string")
 		}
 	}
 

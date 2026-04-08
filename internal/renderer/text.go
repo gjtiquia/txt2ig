@@ -36,46 +36,62 @@ func NewTextRenderer(face font.Face, cfg *config.Config) (*TextRenderer, error) 
 }
 
 func (r *TextRenderer) WrapText(text string, maxWidth int) []string {
+	// Split text into paragraphs (preserve newlines)
+	paragraphs := strings.Split(text, "\n")
+
 	if !r.config.TextWrap {
-		return strings.Split(text, "\n")
+		// Even with text wrapping disabled, preserve newlines
+		return paragraphs
 	}
 
-	words := strings.Fields(text)
-	if len(words) == 0 {
-		return []string{""}
-	}
+	var result []string
 
-	var lines []string
-	var currentLine strings.Builder
-
-	for _, word := range words {
-		testLine := currentLine.String()
-		if testLine != "" {
-			testLine += " " + word
-		} else {
-			testLine = word
+	for _, paragraph := range paragraphs {
+		// Preserve empty lines
+		if paragraph == "" {
+			result = append(result, "")
+			continue
 		}
 
-		lineWidth := txtfont.MeasureTextWidth(r.face, testLine)
-		if lineWidth <= maxWidth || currentLine.Len() == 0 {
-			if currentLine.Len() > 0 {
-				currentLine.WriteString(" ")
+		// Word wrap within this paragraph
+		words := strings.Fields(paragraph)
+		if len(words) == 0 {
+			result = append(result, "")
+			continue
+		}
+
+		var currentLine strings.Builder
+		for _, word := range words {
+			testLine := currentLine.String()
+			if testLine != "" {
+				testLine += " " + word
+			} else {
+				testLine = word
 			}
-			currentLine.WriteString(word)
-		} else {
-			if currentLine.Len() > 0 {
-				lines = append(lines, currentLine.String())
-				currentLine.Reset()
+
+			lineWidth := txtfont.MeasureTextWidth(r.face, testLine)
+			if lineWidth <= maxWidth || currentLine.Len() == 0 {
+				if currentLine.Len() > 0 {
+					currentLine.WriteString(" ")
+				}
+				currentLine.WriteString(word)
+			} else {
+				// Line is too long, start a new one
+				if currentLine.Len() > 0 {
+					result = append(result, currentLine.String())
+					currentLine.Reset()
+				}
+				currentLine.WriteString(word)
 			}
-			currentLine.WriteString(word)
+		}
+
+		// Add the last line of this paragraph
+		if currentLine.Len() > 0 {
+			result = append(result, currentLine.String())
 		}
 	}
 
-	if currentLine.Len() > 0 {
-		lines = append(lines, currentLine.String())
-	}
-
-	return lines
+	return result
 }
 
 func (r *TextRenderer) CalculateTextBoxSize(lines []string) (width, height int) {

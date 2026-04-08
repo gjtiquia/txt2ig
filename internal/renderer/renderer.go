@@ -78,11 +78,12 @@ func (r *Renderer) RenderWithProcessors(inputPath, outputPath string, preProcess
 
 func GetDefaultOutputPath(inputPath string) string {
 	// If input is my-post.md, output will be my-post.jpg
-	if len(inputPath) > 3 {
-		ext := inputPath[len(inputPath)-3:]
-		if ext == ".md" || ext == "txt" {
-			return inputPath[:len(inputPath)-3] + "jpg"
-		}
+	// Handle .md and .txt extensions
+	if len(inputPath) > 3 && inputPath[len(inputPath)-3:] == ".md" {
+		return inputPath[:len(inputPath)-3] + ".jpg"
+	}
+	if len(inputPath) > 4 && inputPath[len(inputPath)-4:] == ".txt" {
+		return inputPath[:len(inputPath)-4] + ".jpg"
 	}
 	return inputPath + ".jpg"
 }

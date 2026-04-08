@@ -37,6 +37,10 @@ func DefaultConfig() *Config {
 	return cfg
 }
 
+func DefaultConfigContent() []byte {
+	return defaultConfig
+}
+
 func (c *Config) ToJSON() ([]byte, error) {
 	return json.MarshalIndent(c, "", "  ")
 }

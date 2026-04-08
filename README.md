@@ -56,6 +56,16 @@ txt2ig post.md -c ./custom-config.jsonc
 # debug currently used config
 txt2ig --debug
 
+# create a default config file for quick customization
+txt2ig init
+# creates .txt2igconfig.jsonc in current directory
+
+# init with custom output path
+txt2ig init -o my-config.jsonc
+
+# init with force overwrite
+txt2ig init --force
+
 # and of cuz, a helpful help menu
 txt2ig -help
 txt2ig -h
@@ -64,6 +74,17 @@ txt2ig -h
 ## config
 
 config is a simple jsonc (JSON with Comments) file
+
+### quick start
+
+```bash
+# create a default config file to customize
+txt2ig init
+# creates .txt2igconfig.jsonc in current directory
+
+# or specify a custom path
+txt2ig init -o my-config.jsonc
+```
 
 ### config location
 

@@ -117,3 +117,23 @@ func TestDefaultConfig_FromEmbeddedFile(t *testing.T) {
 		t.Errorf("DefaultConfig PostProcessors should have 2 items, got %d", len(cfg.PostProcessors))
 	}
 }
+
+func TestDefaultConfigContent_ReturnsValidJSONC(t *testing.T) {
+	content := DefaultConfigContent()
+	if len(content) == 0 {
+		t.Error("DefaultConfigContent should not be empty")
+	}
+
+	cfg := &Config{}
+	if err := ParseJSONC(content, cfg); err != nil {
+		t.Errorf("DefaultConfigContent should be valid JSONC: %v", err)
+	}
+
+	if cfg.FontSize != 32 {
+		t.Errorf("Parsed config FontSize = %d, want 32", cfg.FontSize)
+	}
+
+	if len(cfg.PostProcessors) != 2 {
+		t.Errorf("Parsed config PostProcessors should have 2 items, got %d", len(cfg.PostProcessors))
+	}
+}

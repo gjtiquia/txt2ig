@@ -101,7 +101,7 @@ feel free to copy and paste this to your own config and override what you need
         "boldItalic": ["GoMonoBoldItalic"]
     },
     // unit: px
-    "fontSize": 18,
+    "fontSize": 32,
     "fontColor": "#FFFFFF",
     "bgColor": "#000000",
     // text x-axis position within the text box

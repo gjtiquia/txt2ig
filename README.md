@@ -2,7 +2,9 @@
 
 a cli tool to convert text files to images with plain text, ready for posting to instagram
 
-meant to be dead simple, minimal config
+meant to be dead simple, intuitive config
+
+> not to be confused with `txt2img` for ai image gen
 
 ## installation
 

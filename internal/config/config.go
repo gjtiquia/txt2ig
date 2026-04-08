@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 type FontFamily struct {
 	Regular    []string `json:"regular"`
 	Bold       []string `json:"bold"`
@@ -25,25 +27,9 @@ type Config struct {
 }
 
 func DefaultConfig() *Config {
-	return &Config{
-		FontFamily: FontFamily{
-			Regular:    []string{"GoMono"},
-			Bold:       []string{"GoMonoBold"},
-			Italic:     []string{"GoMonoItalic"},
-			BoldItalic: []string{"GoMonoBoldItalic"},
-		},
-		FontSize:        18,
-		FontColor:       "#FFFFFF",
-		BgColor:         "#000000",
-		TextJustify:     "left",
-		TextBoxJustify:  "center",
-		TextBoxAlign:    "center",
-		TextBoxOffset:   []int{0, 0},
-		TextBoxMaxWidth: 972,
-		ScreenSize:      []int{1080, 1920},
-		TextWrap:        true,
-		LineHeight:      1.4,
-		PreProcessors:   []interface{}{},
-		PostProcessors:  []interface{}{},
+	cfg := &Config{}
+	if err := ParseJSONC(defaultConfig, cfg); err != nil {
+		panic(fmt.Errorf("parse embedded default config: %w", err))
 	}
+	return cfg
 }

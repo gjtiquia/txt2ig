@@ -63,3 +63,57 @@ func TestFontFamilyJSONTags(t *testing.T) {
 		t.Errorf("FontFamily.BoldItalic not properly set")
 	}
 }
+
+func TestDefaultConfig_FromEmbeddedFile(t *testing.T) {
+	cfg := DefaultConfig()
+
+	// Verify values match the embedded default.jsonc from README
+	if cfg.FontSize != 32 {
+		t.Errorf("DefaultConfig FontSize = %d, want 32", cfg.FontSize)
+	}
+
+	if cfg.FontColor != "#FFFFFF" {
+		t.Errorf("DefaultConfig FontColor = %s, want #FFFFFF", cfg.FontColor)
+	}
+
+	if cfg.BgColor != "#000000" {
+		t.Errorf("DefaultConfig BgColor = %s, want #000000", cfg.BgColor)
+	}
+
+	if cfg.TextJustify != "left" {
+		t.Errorf("DefaultConfig TextJustify = %s, want left", cfg.TextJustify)
+	}
+
+	if cfg.TextBoxJustify != "center" {
+		t.Errorf("DefaultConfig TextBoxJustify = %s, want center", cfg.TextBoxJustify)
+	}
+
+	if cfg.TextBoxAlign != "center" {
+		t.Errorf("DefaultConfig TextBoxAlign = %s, want center", cfg.TextBoxAlign)
+	}
+
+	if !reflect.DeepEqual(cfg.TextBoxOffset, []int{0, 0}) {
+		t.Errorf("DefaultConfig TextBoxOffset = %v, want [0 0]", cfg.TextBoxOffset)
+	}
+
+	if cfg.TextBoxMaxWidth != 972 {
+		t.Errorf("DefaultConfig TextBoxMaxWidth = %d, want 972", cfg.TextBoxMaxWidth)
+	}
+
+	if !reflect.DeepEqual(cfg.ScreenSize, []int{1080, 1920}) {
+		t.Errorf("DefaultConfig ScreenSize = %v, want [1080 1920]", cfg.ScreenSize)
+	}
+
+	if !cfg.TextWrap {
+		t.Error("DefaultConfig TextWrap should be true")
+	}
+
+	if cfg.LineHeight != 1.4 {
+		t.Errorf("DefaultConfig LineHeight = %f, want 1.4", cfg.LineHeight)
+	}
+
+	// Verify postProcessors from embedded config
+	if len(cfg.PostProcessors) != 2 {
+		t.Errorf("DefaultConfig PostProcessors should have 2 items, got %d", len(cfg.PostProcessors))
+	}
+}

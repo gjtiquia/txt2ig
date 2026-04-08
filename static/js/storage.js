@@ -68,3 +68,16 @@ if (document.readyState === 'loading') {
 } else {
     setupAutoSave();
 }
+
+// Download image from hidden input data
+function downloadImageFromData() {
+    const base64 = document.getElementById('image-base64').value;
+    const format = document.getElementById('image-format').value;
+    
+    const link = document.createElement('a');
+    link.href = 'data:image/' + format + ';base64,' + base64;
+    link.download = 'txt2ig-image.' + format;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}

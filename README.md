@@ -12,6 +12,24 @@ meant to be dead simple, minimal config
 go install github.com/gjtiquia/txt2ig@latest
 ```
 
+<details>
+<summary>other useful commands:</summary>
+
+```bash
+# checks what is the latest available version on go proxy cache
+go list -m github.com/gjtiquia/txt2ig@latest
+
+# checks what is the latest version directly from GitHub
+GOPROXY=direct go list -m github.com/gjtiquia/txt2ig@latest
+
+# installs latest version directly from GitHub
+GOPROXY=direct go install github.com/gjtiquia/txt2ig@latest
+
+# installs binary at current directory instead of a global install
+GOBIN=$(pwd) go install github.com/gjtiquia/txt2ig@latest
+```
+</details>
+
 ## usage
 
 ```bash

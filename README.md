@@ -307,6 +307,22 @@ perhaps look into go plugins...? see how gonotify does it
 
 - golang
 
+## ai-usage disclosure
+
+ai is heavily used for generating code in this project
+
+continuing the ai workflow exploration after [ifg](https://github.com/gjtiquia/ifg)
+
+some thoughts
+- golang is still a really great language to vibecode with!
+- Opencode Go GLM 5 is apparently pretty good at doing long running tasks and thorough research!
+- a really great workflow i find to work well so far is
+  - create a solid README.md first, as if the tool already exists
+  - this helps you scope out the project and hv a vision for the final product first
+  - also provides an anchor for the LLM to develop on (kinda like GDD for game devs)
+
+(inspired by [ghostty's ai usage policy](https://github.com/ghostty-org/ghostty/blob/main/AI_POLICY.md))
+
 ## license
 
 MIT

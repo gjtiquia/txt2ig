@@ -24,3 +24,11 @@ func LoadJSONCFile(path string, v interface{}) error {
 
 	return ParseJSONC(data, v)
 }
+
+func ParseConfig(data []byte) (*Config, error) {
+	cfg := DefaultConfig()
+	if err := ParseJSONC(data, cfg); err != nil {
+		return nil, fmt.Errorf("parse config: %w", err)
+	}
+	return cfg, nil
+}

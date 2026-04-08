@@ -1,0 +1,31 @@
+package components
+
+templ ImageResult(base64 string, format string) {
+	<div class="space-y-4">
+		<div class="bg-gray-800 rounded-lg overflow-hidden">
+			<img 
+				src={ "data:image/" + format + ";base64," + base64 }
+				alt="Generated image"
+				class="w-full h-auto max-w-full"
+			/>
+		</div>
+
+		<div class="flex gap-4">
+			<a
+				href={ "data:image/" + format + ";base64," + base64 }
+				download={ "image." + format }
+				class="flex-1 bg-green-600 text-white font-medium py-3 px-6 rounded-lg hover:bg-green-700 transition-colors text-center text-lg"
+			>
+				Download Image
+			</a>
+
+			<button
+				type="button"
+				onclick="document.getElementById('convert-form').requestSubmit()"
+				class="flex-1 bg-gray-700 text-white font-medium py-3 px-6 rounded-lg hover:bg-gray-600 transition-colors text-lg"
+			>
+				Regenerate
+			</button>
+		</div>
+	</div>
+}

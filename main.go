@@ -8,20 +8,28 @@ import (
 	"github.com/gjtiquia/txt2ig/internal/cli"
 	"github.com/gjtiquia/txt2ig/internal/config"
 	"github.com/gjtiquia/txt2ig/internal/renderer"
+	"github.com/gjtiquia/txt2ig/internal/web"
 )
 
 func main() {
-	// Parse CLI arguments
 	cliArgs, err := cli.Parse(os.Args[1:])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Load config
+	switch {
+	case cliArgs.Convert.InputFile != "":
+		runConvert(&cliArgs.Convert)
+	case true:
+		runWeb(&cliArgs.Web)
+	}
+}
+
+func runConvert(cmd *cli.ConvertCmd) {
 	loader := config.NewConfigLoader()
-	if cliArgs.Config != "" {
-		loader.SetCustomPath(cliArgs.Config)
+	if cmd.Config != "" {
+		loader.SetCustomPath(cmd.Config)
 	}
 
 	cfg, err := loader.Load()
@@ -30,19 +38,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Determine output path
-	outputPath := renderer.DetermineOutputPath(cliArgs.InputFile, cliArgs.Output)
+	outputPath := renderer.DetermineOutputPath(cmd.InputFile, cmd.Output)
 
-	// Create renderer
 	r := renderer.NewRenderer(cfg)
 	defer r.Close()
 
-	// Render the image
-	fmt.Printf("Converting %s to %s...\n", filepath.Base(cliArgs.InputFile), filepath.Base(outputPath))
-	if err := r.Render(cliArgs.InputFile, outputPath); err != nil {
+	fmt.Printf("Converting %s to %s...\n", filepath.Base(cmd.InputFile), filepath.Base(outputPath))
+	if err := r.Render(cmd.InputFile, outputPath); err != nil {
 		fmt.Fprintf(os.Stderr, "Error rendering: %v\n", err)
 		os.Exit(1)
 	}
 
 	fmt.Printf("Successfully created %s\n", outputPath)
+}
+
+func runWeb(cmd *cli.WebCmd) {
+	server := web.NewServer()
+	if err := server.Run(cmd.Port); err != nil {
+		fmt.Fprintf(os.Stderr, "Error starting web server: %v\n", err)
+		os.Exit(1)
+	}
 }

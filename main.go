@@ -5,42 +5,37 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/alecthomas/kong"
+	"github.com/gjtiquia/txt2ig/internal/cli"
 	"github.com/gjtiquia/txt2ig/internal/config"
 	"github.com/gjtiquia/txt2ig/internal/renderer"
+	"github.com/gjtiquia/txt2ig/internal/watch"
+	"github.com/gjtiquia/txt2ig/internal/web"
 )
 
-var cli struct {
-	Convert ConvertCmd `cmd:"" default:"withargs" help:"Convert text file to image"`
-	Init    InitCmd    `cmd:"" help:"Create default config file"`
-}
-
-type ConvertCmd struct {
-	InputFile string `arg:"" name:"file" help:"Text file to convert" type:"existingfile" optional:""`
-	Output    string `short:"o" help:"Output file name (.jpg or .png)" type:"path"`
-	Config    string `short:"c" long:"config" help:"Custom config file" type:"existingfile"`
-	Debug     bool   `short:"d" long:"debug" help:"Print config info and exit"`
-}
-
-type InitCmd struct {
-	Output string `short:"o" long:"output" help:"Output file path" type:"path" default:".txt2igconfig.jsonc"`
-	Force  bool   `short:"f" long:"force" help:"Overwrite existing file"`
-}
-
 func main() {
-	ctx := kong.Parse(&cli, kong.Name("txt2ig"), kong.Description("Convert text files to images for Instagram"))
+	cliArgs, err := cli.Parse(os.Args[1:])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
 
-	switch ctx.Command() {
-	case "init":
-		runInit(&cli.Init)
-	case "convert":
-		runConvert(&cli.Convert)
+	switch {
+	case cliArgs.Init.Output != "":
+		runInit(&cliArgs.Init)
+	case cliArgs.Web.Port > 0:
+		runWeb(&cliArgs.Web)
+	case cliArgs.Convert.InputFile != "":
+		if cliArgs.Convert.Watch {
+			runWatch(&cliArgs.Convert)
+		} else {
+			runConvert(&cliArgs.Convert)
+		}
 	default:
-		runConvert(&cli.Convert)
+		runConvert(&cliArgs.Convert)
 	}
 }
 
-func runConvert(cmd *ConvertCmd) {
+func runConvert(cmd *cli.ConvertCmd) {
 	loader := config.NewConfigLoader()
 	if cmd.Config != "" {
 		loader.SetCustomPath(cmd.Config)
@@ -76,7 +71,7 @@ func runConvert(cmd *ConvertCmd) {
 	fmt.Printf("Successfully created %s\n", outputPath)
 }
 
-func runInit(cmd *InitCmd) {
+func runInit(cmd *cli.InitCmd) {
 	outputPath := cmd.Output
 	if outputPath == "" {
 		outputPath = ".txt2igconfig.jsonc"
@@ -100,9 +95,30 @@ func runInit(cmd *InitCmd) {
 	}
 }
 
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
+func runWatch(cmd *cli.ConvertCmd) {
+	server, err := watch.NewServer(cmd.InputFile, cmd.Config)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating server: %v\n", err)
+		os.Exit(1)
+	}
+
+	port := 0
+	if cmd.Port > 0 {
+		port = cmd.Port
+	}
+
+	if err := server.Run(port); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func runWeb(cmd *cli.WebCmd) {
+	server := web.NewServer()
+	if err := server.Run(cmd.Port); err != nil {
+		fmt.Fprintf(os.Stderr, "Error starting web server: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 func printDebugInfo(loader *config.ConfigLoader, cfg *config.Config) {
@@ -149,7 +165,7 @@ func printDebugInfo(loader *config.ConfigLoader, cfg *config.Config) {
 
 	jsonOutput, err := cfg.ToJSON()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error serializing config: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error serialzing config: %v\n", err)
 		os.Exit(1)
 	}
 

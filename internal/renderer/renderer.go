@@ -1,7 +1,12 @@
 package renderer
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"os"
 
 	"github.com/gjtiquia/txt2ig/internal/config"
@@ -140,4 +145,70 @@ func mustNewFace(f *txtfont.Manager, names []string, size float64) font.Face {
 		panic(err)
 	}
 	return face
+}
+
+func (r *Renderer) RenderString(text string) (*image.RGBA, error) {
+	processedText, err := processor.ApplyPreProcessors(text, r.config.PreProcessors)
+	if err != nil {
+		return nil, fmt.Errorf("apply pre-processors: %w", err)
+	}
+
+	fontFamily, err := r.fontManager.LoadFontFamily(txtfont.FontFamilyConfig{
+		Regular:    r.config.FontFamily.Regular,
+		Bold:       r.config.FontFamily.Bold,
+		Italic:     r.config.FontFamily.Italic,
+		BoldItalic: r.config.FontFamily.BoldItalic,
+	}, float64(r.config.FontSize), 72)
+	if err != nil {
+		return nil, fmt.Errorf("load font family: %w", err)
+	}
+
+	imgRenderer, err := NewImageRenderer(r.config.ScreenSize[0], r.config.ScreenSize[1], r.config.BgColor)
+	if err != nil {
+		return nil, fmt.Errorf("create image renderer: %w", err)
+	}
+
+	img := imgRenderer.CreateCanvas()
+
+	textRenderer, err := NewTextRendererWithFamily(fontFamily, r.config)
+	if err != nil {
+		return nil, fmt.Errorf("create text renderer: %w", err)
+	}
+
+	maxWidth := r.config.TextBoxMaxWidth
+	if maxWidth == 0 {
+		maxWidth = int(float64(r.config.ScreenSize[0]) * 0.9)
+	}
+	lines := textRenderer.WrapText(processedText, maxWidth)
+
+	processedLines, err := processor.ApplyPostProcessors(lines, r.config.PostProcessors)
+	if err != nil {
+		return nil, fmt.Errorf("apply post-processors: %w", err)
+	}
+
+	if err := textRenderer.DrawText(img, processedLines); err != nil {
+		return nil, fmt.Errorf("draw text: %w", err)
+	}
+
+	return img, nil
+}
+
+func EncodeImage(img *image.RGBA, format string) (string, error) {
+	var buf bytes.Buffer
+	switch format {
+	case "png":
+		err := png.Encode(&buf, img)
+		if err != nil {
+			return "", fmt.Errorf("encode png: %w", err)
+		}
+		return base64.StdEncoding.EncodeToString(buf.Bytes()), nil
+	case "jpg", "jpeg":
+		err := jpeg.Encode(&buf, img, &jpeg.Options{Quality: 95})
+		if err != nil {
+			return "", fmt.Errorf("encode jpeg: %w", err)
+		}
+		return base64.StdEncoding.EncodeToString(buf.Bytes()), nil
+	default:
+		return "", fmt.Errorf("unsupported format: %s", format)
+	}
 }

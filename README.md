@@ -73,6 +73,28 @@ txt2ig -help
 txt2ig -h
 ```
 
+## web server
+
+Start a web server for converting text to images:
+
+```bash
+# start on port 3000 (default)
+txt2ig web
+
+# start on custom port
+txt2ig web --port 8080
+
+# short form
+txt2ig web -p 8080
+```
+
+Features:
+- Mobile-friendly interface
+- Auto-save config and text to LocalStorage
+- Preview image before download
+- Real-time validation
+- Download image as PNG
+
 ## config
 
 config is a simple jsonc (JSON with Comments) file

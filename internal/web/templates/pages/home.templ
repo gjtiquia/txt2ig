@@ -1,0 +1,10 @@
+package pages
+
+import "github.com/gjtiquia/txt2ig/internal/web/templates/components"
+import "github.com/gjtiquia/txt2ig/internal/web/templates/layouts"
+
+templ Home(defaultConfig string) {
+	@layouts.Base("txt2ig - Text to Image Converter") {
+		@components.TextForm(defaultConfig)
+	}
+}

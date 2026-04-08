@@ -66,11 +66,12 @@ func (l *ConfigLoader) getConfigPaths() []string {
 func MergeConfigs(base, override *Config) *Config {
 	result := &Config{}
 
-	// Font
-	if len(override.Font) > 0 {
-		result.Font = override.Font
+	// FontFamily
+	if len(override.FontFamily.Regular) > 0 || len(override.FontFamily.Bold) > 0 ||
+		len(override.FontFamily.Italic) > 0 || len(override.FontFamily.BoldItalic) > 0 {
+		result.FontFamily = override.FontFamily
 	} else {
-		result.Font = base.Font
+		result.FontFamily = base.FontFamily
 	}
 
 	// FontSize

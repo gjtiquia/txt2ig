@@ -1,7 +1,14 @@
 package config
 
+type FontFamily struct {
+	Regular    []string `json:"regular"`
+	Bold       []string `json:"bold"`
+	Italic     []string `json:"italic"`
+	BoldItalic []string `json:"boldItalic"`
+}
+
 type Config struct {
-	Font            []string      `json:"font"`
+	FontFamily      FontFamily    `json:"fontFamily"`
 	FontSize        int           `json:"fontSize"`
 	FontColor       string        `json:"fontColor"`
 	BgColor         string        `json:"bgColor"`
@@ -19,7 +26,12 @@ type Config struct {
 
 func DefaultConfig() *Config {
 	return &Config{
-		Font:            []string{"GoMono"},
+		FontFamily: FontFamily{
+			Regular:    []string{"GoMono"},
+			Bold:       []string{"GoMonoBold"},
+			Italic:     []string{"GoMonoItalic"},
+			BoldItalic: []string{"GoMonoBoldItalic"},
+		},
 		FontSize:        18,
 		FontColor:       "#FFFFFF",
 		BgColor:         "#000000",

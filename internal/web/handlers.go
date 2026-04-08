@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gjtiquia/txt2ig/internal/config"
 	"github.com/gjtiquia/txt2ig/internal/renderer"
@@ -59,4 +60,37 @@ func (s *Server) handleConvert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	components.ImageResult(base64, format).Render(r.Context(), w)
+}
+
+func (s *Server) handleWatchPage(w http.ResponseWriter, r *http.Request) {
+	initialImage := ""
+	if s.watchedFile != "" {
+		if data, err := os.ReadFile(s.watchedFile); err == nil {
+			cfg := s.config
+			rend := renderer.NewRenderer(cfg)
+			if img, err := rend.RenderString(string(data)); err == nil {
+				if base64, err := renderer.EncodeImage(img, "png"); err == nil {
+					initialImage = base64
+				}
+			}
+			rend.Close()
+		}
+	}
+
+	pages.Watch(s.watchedFile, initialImage).Render(r.Context(), w)
+}
+
+func (s *Server) handleWatchSSE(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	s.sseHub.AddClient(w)
+	defer s.sseHub.RemoveClient(w)
+
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+	}
+
+	<-r.Context().Done()
 }

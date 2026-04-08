@@ -1,0 +1,84 @@
+package pages
+
+import "github.com/gjtiquia/txt2ig/internal/web/templates/layouts"
+
+templ Watch(filePath string, initialImage string) {
+	@layouts.Base("txt2ig - Live Preview") {
+		<script src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.4/dist/sse.min.js"></script>
+		<div class="container mx-auto px-4 py-8 max-w-2xl">
+			<div class="mb-6">
+				<h1 class="text-3xl font-bold mb-2">Live Preview</h1>
+				<p class="text-gray-400">Watching: <code class="bg-gray-800 px-2 py-1 rounded">{ filePath }</code></p>
+				<div id="connection-status" class="mt-2 text-sm">
+					<span class="flex items-center gap-2">
+						<span class="w-2 h-2 rounded-full bg-green-500"></span>
+						Connected
+					</span>
+				</div>
+				<div id="last-update" class="mt-1 text-sm text-gray-500">
+					if initialImage != "" {
+						<span>Last updated: </span><span id="update-time"></span>
+					} else {
+						<span>Waiting for initial render...</span>
+					}
+				</div>
+			</div>
+			
+			<div hx-ext="sse" sse-connect="/sse/watch" sse-swap="message">
+				<div id="preview-container">
+					<div id="loading" class="htmx-indicator hidden mb-4">
+						<div class="flex items-center gap-2 text-yellow-500">
+							<div class="animate-spin w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full"></div>
+							<span>Regenerating...</span>
+						</div>
+					</div>
+					
+					<div id="image-container" class="bg-gray-800 rounded-lg overflow-hidden">
+						if initialImage != "" {
+							<img 
+								src={ "data:image/png;base64," + initialImage }
+								alt="Preview"
+								class="w-full h-auto max-w-full"
+							/>
+						} else {
+							<div class="text-gray-500 text-center py-16">
+								Waiting for initial render...
+							</div>
+						}
+					</div>
+				</div>
+			</div>
+			
+			<div id="error-container" class="mt-4"></div>
+		</div>
+		
+		<script>
+			document.body.addEventListener('htmx:sseBeforeMessage', function(evt) {
+				try {
+					const data = JSON.parse(evt.detail.data);
+					
+					if (data.type === 'image') {
+						document.getElementById('image-container').innerHTML = data.html;
+						document.getElementById('loading').classList.add('hidden');
+						document.getElementById('update-time').textContent = new Date().toLocaleTimeString();
+					} else if (data.type === 'error') {
+						document.getElementById('error-container').innerHTML = '<div class="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded">' + data.error + '</div>';
+						document.getElementById('loading').classList.add('hidden');
+					}
+				} catch (e) {
+					console.error('Error parsing SSE message:', e);
+				}
+			});
+			
+			document.body.addEventListener('htmx:sseOpen', function() {
+				document.querySelector('#connection-status .rounded-full').classList.remove('bg-red-500');
+				document.querySelector('#connection-status .rounded-full').classList.add('bg-green-500');
+			});
+			
+			document.body.addEventListener('htmx:sseError', function() {
+				document.querySelector('#connection-status .rounded-full').classList.remove('bg-green-500');
+				document.querySelector('#connection-status .rounded-full').classList.add('bg-red-500');
+			});
+		</script>
+	}
+}

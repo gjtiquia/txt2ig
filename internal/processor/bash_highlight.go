@@ -108,8 +108,10 @@ func (p *BashCodeHighlighter) highlightBashCode(lines []string) []StyledLine {
 func (p *BashCodeHighlighter) chromaEntryToTextStyle(entry chroma.StyleEntry) *TextStyle {
 	ts := &TextStyle{}
 
+	// Chroma's Colour.String() already includes the # prefix
+	// e.g., returns "#f8f8f2" not "f8f8f2"
 	if entry.Colour.IsSet() {
-		ts.FontColor = "#" + entry.Colour.String()
+		ts.FontColor = entry.Colour.String()
 	} else {
 		ts.FontColor = p.DefaultColor
 	}

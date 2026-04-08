@@ -3,6 +3,7 @@ package renderer
 import (
 	"image"
 	"image/color"
+	"log"
 	"strings"
 
 	"golang.org/x/image/font"
@@ -211,6 +212,18 @@ func (r *TextRenderer) DrawText(img *image.RGBA, styledLines []processor.StyledL
 			lineColor := r.fontColor
 			if segment.Style != nil && segment.Style.FontColor != "" {
 				customColor, err := txtfont.ParseColor(segment.Style.FontColor)
+				if err != nil {
+					// Warn user about parse failure and fallback to default
+					// Truncate segment text for readability
+					preview := segment.Text
+					if len(preview) > 20 {
+						preview = preview[:20] + "..."
+					}
+					log.Printf("WARN: failed to parse color %q for segment %q: %v, falling back to default color",
+						segment.Style.FontColor, preview, err)
+					log.Printf("      default color: #%02X%02X%02X",
+						r.fontColor.R, r.fontColor.G, r.fontColor.B)
+				}
 				if err == nil {
 					lineColor = customColor
 				}

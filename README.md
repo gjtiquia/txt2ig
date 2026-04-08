@@ -6,42 +6,11 @@ meant to be dead simple, minimal config
 
 ## installation
 
-### from release
-
-download the latest binary from [releases](https://github.com/gjtiquia/txt2ig/releases)
+### go install (recommended)
 
 ```bash
-# make it executable
-chmod +x txt2ig
-
-# move to PATH (optional)
-sudo mv txt2ig /usr/local/bin/
+go install github.com/gjtiquia/txt2ig@latest
 ```
-
-### from source
-
-```bash
-# clone the repository
-git clone https://github.com/gjtiquia/txt2ig.git
-cd txt2ig
-
-# build
-go build -o txt2ig
-
-# install to $GOPATH/bin (optional)
-go install
-```
-
-## features
-
-- ✅ **text to image**: convert plain text files to images
-- ✅ **multiple formats**: output as JPG or PNG (auto-detected from file extension)
-- ✅ **configurable**: customize appearance with JSONC config files
-- ✅ **font fallback**: supports fonts with fallback chain, embedded GoMono as final fallback
-- ✅ **text wrapping**: automatic text wrapping with configurable width
-- ✅ **newline preservation**: respects newlines in input, preserves paragraph structure
-- ✅ **processors**: pre-processors for text transformation, post-processors for styling
-- ✅ **simple CLI**: minimal flags, helpful defaults
 
 ## usage
 
@@ -181,23 +150,6 @@ feel free to copy and paste this to your own config and override what you need
 ## examples
 
 ### basic example
-
-create a config file `.txt2igconfig.jsonc`:
-
-```jsonc
-{
-    "fontFamily": {
-        "regular": ["GoMono"],
-        "bold": ["GoMonoBold"],
-        "italic": ["GoMonoItalic"],
-        "boldItalic": ["GoMonoBoldItalic"]
-    },
-    "fontSize": 24,
-    "bgColor": "#000000",
-    "fontColor": "#FFFFFF",
-    "screenSize": [1080, 1920]
-}
-```
 
 create a text file `post.md`:
 

@@ -2,6 +2,7 @@ package processor
 
 import (
 	"fmt"
+	"strings"
 )
 
 type PreProcessor interface {
@@ -27,9 +28,13 @@ type TextStyle struct {
 	Size      *int
 }
 
-type StyledLine struct {
+type StyledSegment struct {
 	Text  string
 	Style *TextStyle
+}
+
+type StyledLine struct {
+	Segments []StyledSegment
 }
 
 type ProcessorRegistry struct {
@@ -87,7 +92,7 @@ func ApplyPostProcessors(lines []string, configs []interface{}) ([]StyledLine, e
 
 	result := make([]StyledLine, len(lines))
 	for i, line := range lines {
-		result[i] = StyledLine{Text: line, Style: nil}
+		result[i] = PlainText(line)
 	}
 
 	for _, p := range processors {
@@ -100,12 +105,12 @@ func ApplyPostProcessors(lines []string, configs []interface{}) ([]StyledLine, e
 	}
 
 	for i := range result {
-		if hasNonDefaultStyle(result[i].Style) {
+		if HasStyledSegments(result[i]) {
 			continue
 		}
 
 		var currentStyle *TextStyle
-		processedLine := result[i].Text
+		lineText := StyledSegmentsToText(result[i].Segments)
 
 		for _, p := range processors {
 			if _, ok := p.(StatefulPostProcessor); ok {
@@ -113,7 +118,7 @@ func ApplyPostProcessors(lines []string, configs []interface{}) ([]StyledLine, e
 			}
 
 			var style *TextStyle
-			processedLine, style, err = p.Process(processedLine)
+			lineText, style, err = p.Process(lineText)
 			if err != nil {
 				return nil, fmt.Errorf("apply post-processor: %w", err)
 			}
@@ -122,7 +127,11 @@ func ApplyPostProcessors(lines []string, configs []interface{}) ([]StyledLine, e
 			}
 		}
 
-		result[i] = StyledLine{Text: processedLine, Style: currentStyle}
+		if currentStyle != nil {
+			for j := range result[i].Segments {
+				result[i].Segments[j].Style = mergeStyles(result[i].Segments[j].Style, currentStyle)
+			}
+		}
 	}
 
 	return result, nil
@@ -360,4 +369,40 @@ func ParsePostProcessorConfigs(configs []interface{}) ([]PostProcessor, error) {
 		processors = append(processors, p)
 	}
 	return processors, nil
+}
+
+func SingleSegment(text string, style *TextStyle) StyledLine {
+	if style == nil {
+		return StyledLine{
+			Segments: []StyledSegment{{Text: text, Style: nil}},
+		}
+	}
+	return StyledLine{
+		Segments: []StyledSegment{{Text: text, Style: style}},
+	}
+}
+
+func PlainText(text string) StyledLine {
+	return StyledLine{
+		Segments: []StyledSegment{{Text: text, Style: nil}},
+	}
+}
+
+func StyledSegmentsToText(segments []StyledSegment) string {
+	var sb strings.Builder
+	for _, seg := range segments {
+		sb.WriteString(seg.Text)
+	}
+	return sb.String()
+}
+
+func HasStyledSegments(line StyledLine) bool {
+	for _, seg := range line.Segments {
+		if seg.Style != nil {
+			if seg.Style.FontColor != "" || seg.Style.Bold || seg.Style.Italic || seg.Style.Underline || seg.Style.Size != nil {
+				return true
+			}
+		}
+	}
+	return false
 }

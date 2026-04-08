@@ -91,9 +91,15 @@ feel free to copy and paste this to your own config and override what you need
 
 ```jsonc
 {
-    // target font and fallback fonts
-    // supports font names and file paths: ["FiraMono", "/path/to/custom.ttf", "mono"]
-    "font": ["GoMono"],
+    // font family configuration with bold/italic variants
+    // supports font names and file paths with fallback chain
+    // embedded GoMono variants available: GoMono, GoMonoBold, GoMonoItalic, GoMonoBoldItalic
+    "fontFamily": {
+        "regular": ["GoMono"],
+        "bold": ["GoMonoBold"],
+        "italic": ["GoMonoItalic"],
+        "boldItalic": ["GoMonoBoldItalic"]
+    },
     // unit: px
     "fontSize": 18,
     "fontColor": "#FFFFFF",
@@ -172,7 +178,12 @@ create a config file `.txt2igconfig.jsonc`:
 
 ```jsonc
 {
-    "font": ["GoMono"],
+    "fontFamily": {
+        "regular": ["GoMono"],
+        "bold": ["GoMonoBold"],
+        "italic": ["GoMonoItalic"],
+        "boldItalic": ["GoMonoBoldItalic"]
+    },
     "fontSize": 24,
     "bgColor": "#000000",
     "fontColor": "#FFFFFF",
@@ -204,7 +215,12 @@ txt2ig post.md
 
 ```jsonc
 {
-    "font": ["GoMono"],
+    "fontFamily": {
+        "regular": ["GoMono"],
+        "bold": ["GoMonoBold"],
+        "italic": ["GoMonoItalic"],
+        "boldItalic": ["GoMonoBoldItalic"]
+    },
     "fontSize": 20,
     "bgColor": "#1E1E1E",
     "fontColor": "#00FF00",

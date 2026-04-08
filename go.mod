@@ -7,4 +7,7 @@ require (
 	golang.org/x/image v0.38.0
 )
 
-require golang.org/x/text v0.35.0 // indirect
+require (
+	github.com/titanous/json5 v1.0.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
+)

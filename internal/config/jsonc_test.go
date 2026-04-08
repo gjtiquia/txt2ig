@@ -88,6 +88,57 @@ func TestParseJSONC(t *testing.T) {
 			expected: map[string]interface{}{},
 			wantErr:  false,
 		},
+		// Trailing comma tests
+		{
+			name:     "trailing comma in object",
+			input:    `{"key": "value",}`,
+			expected: map[string]interface{}{"key": "value"},
+			wantErr:  false,
+		},
+		{
+			name:     "trailing comma in array",
+			input:    `{"arr": [1, 2, 3,]}`,
+			expected: map[string]interface{}{"arr": []interface{}{float64(1), float64(2), float64(3)}},
+			wantErr:  false,
+		},
+		{
+			name:     "multiple trailing commas",
+			input:    `{"a": 1, "b": 2,}`,
+			expected: map[string]interface{}{"a": float64(1), "b": float64(2)},
+			wantErr:  false,
+		},
+		{
+			name: "trailing comma with newlines",
+			input: `{
+	"key": "value",
+	"num": 42,
+}`,
+			expected: map[string]interface{}{"key": "value", "num": float64(42)},
+			wantErr:  false,
+		},
+		{
+			name: "trailing comma with comments",
+			input: `{
+	"key": "value", // comment
+	"num": 42, /* another comment */
+}`,
+			expected: map[string]interface{}{"key": "value", "num": float64(42)},
+			wantErr:  false,
+		},
+		{
+			name: "complex config with trailing commas",
+			input: `{
+	"fontSize": 18,
+	"fontColor": "#FFFFFF",
+	"bgColor": "#000000",
+}`,
+			expected: map[string]interface{}{
+				"fontSize":  float64(18),
+				"fontColor": "#FFFFFF",
+				"bgColor":   "#000000",
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -122,49 +173,6 @@ func TestParseJSONC(t *testing.T) {
 				if !reflect.DeepEqual(resultVal, expectedVal) {
 					t.Errorf("ParseJSONC()[%q] = %v, want %v", key, resultVal, expectedVal)
 				}
-			}
-		})
-	}
-}
-
-func TestStripComments(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "no comments",
-			input:    `{"key": "value"}`,
-			expected: `{"key": "value"}`,
-		},
-		{
-			name:     "single-line comment only",
-			input:    `{"key": "value"} // comment`,
-			expected: `{"key": "value"} `,
-		},
-		{
-			name:     "multi-line comment only",
-			input:    `{"key": /* comment */ "value"}`,
-			expected: `{"key":  "value"}`,
-		},
-		{
-			name:     "comment in string preserved",
-			input:    `{"key": "value // comment"}`,
-			expected: `{"key": "value // comment"}`,
-		},
-		{
-			name:     "comment at end",
-			input:    `{"key": "value"} // trailing`,
-			expected: `{"key": "value"} `,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := stripComments([]byte(tt.input))
-			if string(result) != tt.expected {
-				t.Errorf("stripComments() = %q, want %q", string(result), tt.expected)
 			}
 		})
 	}

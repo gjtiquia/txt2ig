@@ -1,76 +1,61 @@
 package processor
 
 import (
+	"strings"
 	"testing"
 )
 
 func TestBashCodeHighlighter_ProcessLines(t *testing.T) {
 	tests := []struct {
-		name     string
-		input    []StyledLine
-		expected []StyledLine
+		name              string
+		input             []StyledLine
+		expectedTexts     []string
+		expectHighlighted []bool
 	}{
 		{
 			name: "code block detection",
 			input: []StyledLine{
-				{Text: "Some text"},
-				{Text: "```bash"},
-				{Text: "echo hello"},
-				{Text: "```"},
-				{Text: "More text"},
+				PlainText("Some text"),
+				PlainText("```bash"),
+				PlainText("echo hello"),
+				PlainText("```"),
+				PlainText("More text"),
 			},
-			expected: []StyledLine{
-				{Text: "Some text"},
-				{Text: "```bash"},
-				{Text: "echo hello", Style: &TextStyle{FontColor: "#66D9EF"}},
-				{Text: "```"},
-				{Text: "More text"},
-			},
+			expectedTexts:     []string{"Some text", "```bash", "echo hello", "```", "More text"},
+			expectHighlighted: []bool{false, false, true, false, false},
 		},
 		{
 			name: "lines outside code blocks unchanged",
 			input: []StyledLine{
-				{Text: "#normal comment"},
-				{Text: "regular text"},
+				PlainText("#normal comment"),
+				PlainText("regular text"),
 			},
-			expected: []StyledLine{
-				{Text: "#normal comment"},
-				{Text: "regular text"},
-			},
+			expectedTexts:     []string{"#normal comment", "regular text"},
+			expectHighlighted: []bool{false, false},
 		},
 		{
 			name: "multiple code blocks",
 			input: []StyledLine{
-				{Text: "```bash"},
-				{Text: "ls -la"},
-				{Text: "```"},
-				{Text: "Some text"},
-				{Text: "```bash"},
-				{Text: "pwd"},
-				{Text: "```"},
+				PlainText("```bash"),
+				PlainText("ls -la"),
+				PlainText("```"),
+				PlainText("Some text"),
+				PlainText("```bash"),
+				PlainText("pwd"),
+				PlainText("```"),
 			},
-			expected: []StyledLine{
-				{Text: "```bash"},
-				{Text: "ls -la", Style: &TextStyle{FontColor: "#66D9EF"}},
-				{Text: "```"},
-				{Text: "Some text"},
-				{Text: "```bash"},
-				{Text: "pwd", Style: &TextStyle{FontColor: "#66D9EF"}},
-				{Text: "```"},
-			},
+			expectedTexts:     []string{"```bash", "ls -la", "```", "Some text", "```bash", "pwd", "```"},
+			expectHighlighted: []bool{false, true, false, false, false, true, false},
 		},
 		{
 			name: "unclosed code block",
 			input: []StyledLine{
-				{Text: "```bash"},
-				{Text: "echo hello"},
-				{Text: "more code"},
+				PlainText("```bash"),
+				PlainText("echo hello"),
+				PlainText("more code"),
 			},
-			expected: []StyledLine{
-				{Text: "```bash"},
-				{Text: "echo hello"},
-				{Text: "more code"},
-			},
+			expectedTexts:     []string{"```bash", "echo hello", "more code"},
+			expectHighlighted: []bool{false, false, false},
 		},
 	}
 
@@ -86,28 +71,61 @@ func TestBashCodeHighlighter_ProcessLines(t *testing.T) {
 				t.Fatalf("ProcessLines() error = %v", err)
 			}
 
-			if len(result) != len(tt.expected) {
-				t.Fatalf("ProcessLines() returned %d lines, expected %d", len(result), len(tt.expected))
+			if len(result) != len(tt.expectedTexts) {
+				t.Fatalf("ProcessLines() returned %d lines, expected %d", len(result), len(tt.expectedTexts))
 			}
 
 			for i := range result {
-				if result[i].Text != tt.expected[i].Text {
-					t.Errorf("Line %d: text = %q, expected %q", i, result[i].Text, tt.expected[i].Text)
+				text := StyledSegmentsToText(result[i].Segments)
+				if text != tt.expectedTexts[i] {
+					t.Errorf("Line %d: text = %q, expected %q", i, text, tt.expectedTexts[i])
 				}
 
-				if tt.expected[i].Style != nil {
-					if result[i].Style == nil {
-						t.Errorf("Line %d: expected style, got nil", i)
-					} else if result[i].Style.FontColor == "" {
-						t.Errorf("Line %d: expected FontColor, got empty", i)
-					}
-				} else {
-					if result[i].Style != nil && result[i].Style.FontColor != "" {
-						t.Errorf("Line %d: expected no style, got FontColor = %s", i, result[i].Style.FontColor)
-					}
+				hasHighlight := HasStyledSegments(result[i])
+				if hasHighlight != tt.expectHighlighted[i] {
+					t.Errorf("Line %d: hasHighlight = %v, expected %v", i, hasHighlight, tt.expectHighlighted[i])
 				}
 			}
 		})
+	}
+}
+
+func TestBashCodeHighlighter_SegmentsPerToken(t *testing.T) {
+	p := &BashCodeHighlighter{
+		StyleName:    "monokai",
+		DefaultColor: "#FFFFFF",
+	}
+
+	input := []StyledLine{
+		PlainText("```bash"),
+		PlainText("echo hello"),
+		PlainText("```"),
+	}
+
+	result, err := p.ProcessLines(input)
+	if err != nil {
+		t.Fatalf("ProcessLines() error = %v", err)
+	}
+
+	echoLine := result[1]
+	if len(echoLine.Segments) == 0 {
+		t.Fatalf("Expected segments in echo line, got 0")
+	}
+
+	fullText := StyledSegmentsToText(echoLine.Segments)
+	if fullText != "echo hello" {
+		t.Errorf("Full text = %q, expected %q", fullText, "echo hello")
+	}
+
+	nonWhitespaceCount := 0
+	for _, seg := range echoLine.Segments {
+		if strings.TrimSpace(seg.Text) != "" && seg.Style != nil && seg.Style.FontColor != "" {
+			nonWhitespaceCount++
+		}
+	}
+
+	if nonWhitespaceCount < 1 {
+		t.Errorf("Expected at least 1 non-whitespace segment with color, got %d", nonWhitespaceCount)
 	}
 }
 

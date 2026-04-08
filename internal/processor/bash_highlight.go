@@ -27,11 +27,13 @@ func (p *BashCodeHighlighter) ProcessLines(lines []StyledLine) ([]StyledLine, er
 
 	i := 0
 	for i < len(lines) {
-		if strings.TrimSpace(lines[i].Text) == "```bash" {
+		lineText := StyledSegmentsToText(lines[i].Segments)
+		if strings.TrimSpace(lineText) == "```bash" {
 			blockStart := i
 			blockEnd := -1
 			for j := i + 1; j < len(lines); j++ {
-				if strings.TrimSpace(lines[j].Text) == "```" {
+				jText := StyledSegmentsToText(lines[j].Segments)
+				if strings.TrimSpace(jText) == "```" {
 					blockEnd = j
 					break
 				}
@@ -44,7 +46,7 @@ func (p *BashCodeHighlighter) ProcessLines(lines []StyledLine) ([]StyledLine, er
 
 			codeLines := make([]string, 0)
 			for k := blockStart + 1; k < blockEnd; k++ {
-				codeLines = append(codeLines, lines[k].Text)
+				codeLines = append(codeLines, StyledSegmentsToText(lines[k].Segments))
 			}
 
 			highlighted := p.highlightBashCode(codeLines)
@@ -76,33 +78,28 @@ func (p *BashCodeHighlighter) highlightBashCode(lines []string) []StyledLine {
 	for i, line := range lines {
 		iterator, err := lexer.Tokenise(nil, line)
 		if err != nil {
-			result[i] = StyledLine{Text: line, Style: nil}
+			result[i] = PlainText(line)
 			continue
 		}
 
 		tokens := iterator.Tokens()
-		if len(tokens) > 0 {
-			var dominantToken chroma.Token
-			maxLen := 0
-			for _, token := range tokens {
-				if len(token.Value) > maxLen && token.Type != chroma.TokenType(chroma.Whitespace) {
-					maxLen = len(token.Value)
-					dominantToken = token
-				}
+
+		segments := make([]StyledSegment, 0, len(tokens))
+		for _, token := range tokens {
+			entry := style.Get(token.Type)
+
+			var segStyle *TextStyle
+			if token.Type != chroma.TokenType(chroma.Whitespace) || p.DefaultColor != "" {
+				segStyle = p.chromaEntryToTextStyle(entry)
 			}
 
-			if maxLen > 0 {
-				entry := style.Get(dominantToken.Type)
-				result[i] = StyledLine{
-					Text:  line,
-					Style: p.chromaEntryToTextStyle(entry),
-				}
-			} else {
-				result[i] = StyledLine{Text: line, Style: nil}
-			}
-		} else {
-			result[i] = StyledLine{Text: line, Style: nil}
+			segments = append(segments, StyledSegment{
+				Text:  token.Value,
+				Style: segStyle,
+			})
 		}
+
+		result[i] = StyledLine{Segments: segments}
 	}
 
 	return result

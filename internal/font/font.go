@@ -49,7 +49,17 @@ func (m *Manager) loadFont(fontSpec string) (*opentype.Font, error) {
 		return f, nil
 	}
 
-	// Try as file path first
+	// Try as embedded font name first
+	if isEmbeddedFontName(fontSpec) {
+		f, err := m.parseEmbeddedFont(fontSpec)
+		if err != nil {
+			return nil, fmt.Errorf("load embedded font %s: %w", fontSpec, err)
+		}
+		m.fonts[fontSpec] = f
+		return f, nil
+	}
+
+	// Try as file path
 	if _, err := os.Stat(fontSpec); err == nil {
 		f, err := m.loadFontFromFile(fontSpec)
 		if err != nil {
@@ -66,6 +76,33 @@ func (m *Manager) loadFont(fontSpec string) (*opentype.Font, error) {
 	}
 	m.fonts[fontSpec] = f
 	return f, nil
+}
+
+func isEmbeddedFontName(name string) bool {
+	switch name {
+	case "GoMono", "GoMonoBold", "GoMonoItalic", "GoMonoBoldItalic":
+		return true
+	}
+	return false
+}
+
+func (m *Manager) parseEmbeddedFont(name string) (*opentype.Font, error) {
+	var fontData []byte
+
+	switch name {
+	case "GoMono":
+		fontData = gomono.TTF
+	case "GoMonoBold":
+		fontData = gomonobold.TTF
+	case "GoMonoItalic":
+		fontData = gomonoitalic.TTF
+	case "GoMonoBoldItalic":
+		fontData = gomonobolditalic.TTF
+	default:
+		return nil, fmt.Errorf("unknown embedded font: %s", name)
+	}
+
+	return opentype.Parse(fontData)
 }
 
 func (m *Manager) loadFontFromFile(path string) (*opentype.Font, error) {

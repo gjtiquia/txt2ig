@@ -37,9 +37,14 @@ func (r *Renderer) Render(inputPath, outputPath string) error {
 	}
 
 	// 3. Load font
-	face, err := r.fontManager.LoadFontWithFallback(r.config.Font, float64(r.config.FontSize), 72)
+	fontFamily, err := r.fontManager.LoadFontFamily(txtfont.FontFamilyConfig{
+		Regular:    r.config.FontFamily.Regular,
+		Bold:       r.config.FontFamily.Bold,
+		Italic:     r.config.FontFamily.Italic,
+		BoldItalic: r.config.FontFamily.BoldItalic,
+	}, float64(r.config.FontSize), 72)
 	if err != nil {
-		return fmt.Errorf("load font: %w", err)
+		return fmt.Errorf("load font family: %w", err)
 	}
 
 	// 4. Create image renderer
@@ -52,7 +57,7 @@ func (r *Renderer) Render(inputPath, outputPath string) error {
 	img := imgRenderer.CreateCanvas()
 
 	// 6. Create text renderer
-	textRenderer, err := NewTextRenderer(face, r.config)
+	textRenderer, err := NewTextRendererWithFamily(fontFamily, r.config)
 	if err != nil {
 		return fmt.Errorf("create text renderer: %w", err)
 	}

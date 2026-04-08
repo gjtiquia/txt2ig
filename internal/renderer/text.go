@@ -14,10 +14,26 @@ import (
 )
 
 type TextRenderer struct {
-	face       font.Face
+	fontFamily *txtfont.FontFamily
 	config     *config.Config
 	fontColor  color.RGBA
 	lineHeight int
+}
+
+func NewTextRendererWithFamily(fontFamily *txtfont.FontFamily, cfg *config.Config) (*TextRenderer, error) {
+	fontColor, err := txtfont.ParseColor(cfg.FontColor)
+	if err != nil {
+		return nil, err
+	}
+
+	lineHeight := txtfont.CalculateLineHeight(fontFamily.Regular, cfg.LineHeight)
+
+	return &TextRenderer{
+		fontFamily: fontFamily,
+		config:     cfg,
+		fontColor:  fontColor,
+		lineHeight: lineHeight,
+	}, nil
 }
 
 func NewTextRenderer(face font.Face, cfg *config.Config) (*TextRenderer, error) {
@@ -29,7 +45,7 @@ func NewTextRenderer(face font.Face, cfg *config.Config) (*TextRenderer, error) 
 	lineHeight := txtfont.CalculateLineHeight(face, cfg.LineHeight)
 
 	return &TextRenderer{
-		face:       face,
+		fontFamily: &txtfont.FontFamily{Regular: face, Bold: face, Italic: face, BoldItalic: face},
 		config:     cfg,
 		fontColor:  fontColor,
 		lineHeight: lineHeight,
@@ -37,24 +53,20 @@ func NewTextRenderer(face font.Face, cfg *config.Config) (*TextRenderer, error) 
 }
 
 func (r *TextRenderer) WrapText(text string, maxWidth int) []string {
-	// Split text into paragraphs (preserve newlines)
 	paragraphs := strings.Split(text, "\n")
 
 	if !r.config.TextWrap {
-		// Even with text wrapping disabled, preserve newlines
 		return paragraphs
 	}
 
 	var result []string
 
 	for _, paragraph := range paragraphs {
-		// Preserve empty lines
 		if paragraph == "" {
 			result = append(result, "")
 			continue
 		}
 
-		// Word wrap within this paragraph
 		words := strings.Fields(paragraph)
 		if len(words) == 0 {
 			result = append(result, "")
@@ -70,14 +82,13 @@ func (r *TextRenderer) WrapText(text string, maxWidth int) []string {
 				testLine = word
 			}
 
-			lineWidth := txtfont.MeasureTextWidth(r.face, testLine)
+			lineWidth := txtfont.MeasureTextWidth(r.fontFamily.Regular, testLine)
 			if lineWidth <= maxWidth || currentLine.Len() == 0 {
 				if currentLine.Len() > 0 {
 					currentLine.WriteString(" ")
 				}
 				currentLine.WriteString(word)
 			} else {
-				// Line is too long, start a new one
 				if currentLine.Len() > 0 {
 					result = append(result, currentLine.String())
 					currentLine.Reset()
@@ -86,7 +97,6 @@ func (r *TextRenderer) WrapText(text string, maxWidth int) []string {
 			}
 		}
 
-		// Add the last line of this paragraph
 		if currentLine.Len() > 0 {
 			result = append(result, currentLine.String())
 		}
@@ -98,7 +108,7 @@ func (r *TextRenderer) WrapText(text string, maxWidth int) []string {
 func (r *TextRenderer) CalculateTextBoxSize(lines []string) (width, height int) {
 	maxWidth := 0
 	for _, line := range lines {
-		w := txtfont.MeasureTextWidth(r.face, line)
+		w := txtfont.MeasureTextWidth(r.fontFamily.Regular, line)
 		if w > maxWidth {
 			maxWidth = w
 		}
@@ -140,6 +150,24 @@ func (r *TextRenderer) CalculateTextBoxPosition(textWidth, textHeight int) (x, y
 	return x, y
 }
 
+func (r *TextRenderer) selectFace(style *processor.TextStyle) font.Face {
+	if style == nil {
+		return r.fontFamily.Regular
+	}
+
+	if style.Bold && style.Italic {
+		return r.fontFamily.BoldItalic
+	}
+	if style.Bold {
+		return r.fontFamily.Bold
+	}
+	if style.Italic {
+		return r.fontFamily.Italic
+	}
+
+	return r.fontFamily.Regular
+}
+
 func (r *TextRenderer) DrawText(img *image.RGBA, styledLines []processor.StyledLine) error {
 	lines := make([]string, len(styledLines))
 	for i, sl := range styledLines {
@@ -152,7 +180,8 @@ func (r *TextRenderer) DrawText(img *image.RGBA, styledLines []processor.StyledL
 	for i, sl := range styledLines {
 		y := startY + (i+1)*r.lineHeight - r.lineHeight/4
 
-		lineWidth := txtfont.MeasureTextWidth(r.face, sl.Text)
+		face := r.selectFace(sl.Style)
+		lineWidth := txtfont.MeasureTextWidth(face, sl.Text)
 
 		var x int
 		switch r.config.TextJustify {
@@ -177,7 +206,7 @@ func (r *TextRenderer) DrawText(img *image.RGBA, styledLines []processor.StyledL
 		drawer := &font.Drawer{
 			Dst:  img,
 			Src:  image.NewUniform(lineColor),
-			Face: r.face,
+			Face: face,
 			Dot: fixed.Point26_6{
 				X: fixed.Int26_6(x << 6),
 				Y: fixed.Int26_6(y << 6),

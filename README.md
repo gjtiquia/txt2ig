@@ -51,6 +51,9 @@ txt2ig ./src/post.txt -o ~/Downloads/img.jpg
 txt2ig post.md --config ./custom-config.jsonc
 txt2ig post.md -c ./custom-config.jsonc
 
+# debug currently used config
+txt2ig --debug
+
 # and of cuz, a helpful help menu
 txt2ig -help
 txt2ig -h

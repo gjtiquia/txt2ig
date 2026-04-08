@@ -1,6 +1,9 @@
 package config
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type FontFamily struct {
 	Regular    []string `json:"regular"`
@@ -32,4 +35,8 @@ func DefaultConfig() *Config {
 		panic(fmt.Errorf("parse embedded default config: %w", err))
 	}
 	return cfg
+}
+
+func (c *Config) ToJSON() ([]byte, error) {
+	return json.MarshalIndent(c, "", "  ")
 }

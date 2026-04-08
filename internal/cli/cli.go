@@ -3,7 +3,8 @@ package cli
 import "github.com/alecthomas/kong"
 
 type CLI struct {
-	InputFile string `arg:"" name:"file" help:"Text file to convert" type:"existingfile"`
+	Debug     bool   `short:"d" long:"debug" help:"Print config info and exit"`
+	InputFile string `arg:"" name:"file" help:"Text file to convert" type:"existingfile" optional:""`
 	Output    string `short:"o" help:"Output file name (.jpg or .png)" type:"path"`
 	Config    string `short:"c" long:"config" help:"Custom config file" type:"existingfile"`
 }

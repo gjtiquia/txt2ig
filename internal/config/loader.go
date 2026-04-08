@@ -8,6 +8,7 @@ import (
 
 type ConfigLoader struct {
 	customPath string
+	usedPath   string
 }
 
 func NewConfigLoader() *ConfigLoader {
@@ -16,6 +17,14 @@ func NewConfigLoader() *ConfigLoader {
 
 func (l *ConfigLoader) SetCustomPath(path string) {
 	l.customPath = path
+}
+
+func (l *ConfigLoader) UsedPath() string {
+	return l.usedPath
+}
+
+func (l *ConfigLoader) GetConfigPaths() []string {
+	return l.getConfigPaths()
 }
 
 func (l *ConfigLoader) Load() (*Config, error) {
@@ -31,9 +40,11 @@ func (l *ConfigLoader) Load() (*Config, error) {
 			return nil, fmt.Errorf("parse config from %s: %w", path, err)
 		}
 
+		l.usedPath = path
 		return cfg, nil
 	}
 
+	l.usedPath = ""
 	return DefaultConfig(), nil
 }
 

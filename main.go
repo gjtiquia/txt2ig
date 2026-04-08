@@ -11,14 +11,12 @@ import (
 )
 
 func main() {
-	// Parse CLI arguments
 	cliArgs, err := cli.Parse(os.Args[1:])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Load config
 	loader := config.NewConfigLoader()
 	if cliArgs.Config != "" {
 		loader.SetCustomPath(cliArgs.Config)
@@ -30,14 +28,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Determine output path
+	if cliArgs.Debug {
+		printDebugInfo(loader, cfg)
+		os.Exit(0)
+	}
+
+	if cliArgs.InputFile == "" {
+		fmt.Fprintf(os.Stderr, "Error: input file is required\n")
+		os.Exit(1)
+	}
+
 	outputPath := renderer.DetermineOutputPath(cliArgs.InputFile, cliArgs.Output)
 
-	// Create renderer
 	r := renderer.NewRenderer(cfg)
 	defer r.Close()
 
-	// Render the image
 	fmt.Printf("Converting %s to %s...\n", filepath.Base(cliArgs.InputFile), filepath.Base(outputPath))
 	if err := r.Render(cliArgs.InputFile, outputPath); err != nil {
 		fmt.Fprintf(os.Stderr, "Error rendering: %v\n", err)
@@ -45,4 +50,62 @@ func main() {
 	}
 
 	fmt.Printf("Successfully created %s\n", outputPath)
+}
+
+func printDebugInfo(loader *config.ConfigLoader, cfg *config.Config) {
+	fmt.Println("Config search chain:")
+	fmt.Println()
+
+	paths := loader.GetConfigPaths()
+	hasCustomConfig := len(paths) == 4
+	pathIdx := 0
+
+	homeDir, _ := os.UserHomeDir()
+	xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
+	if xdgConfigHome == "" {
+		xdgConfigHome = filepath.Join(homeDir, ".config")
+	}
+
+	labels := []string{"--config flag", "./.txt2igconfig.jsonc", "$XDG_CONFIG_HOME/txt2ig/config.jsonc", "~/.txt2ig/config.jsonc"}
+
+	for i := 0; i < 5; i++ {
+		if i < 4 {
+			if i == 0 && !hasCustomConfig {
+				fmt.Printf("  %d. %s: (not specified)\n", i+1, labels[i])
+				continue
+			}
+			if pathIdx < len(paths) {
+				path := paths[pathIdx]
+				fmt.Printf("  %d. %s (%s): ", i+1, labels[i], path)
+				if _, err := os.Stat(path); err == nil {
+					fmt.Println("found ✓")
+				} else {
+					fmt.Println("not found")
+				}
+				pathIdx++
+			}
+		} else {
+			fmt.Println("  5. embedded defaults: (used if no config file found)")
+		}
+	}
+
+	fmt.Println()
+
+	usedPath := loader.UsedPath()
+	if usedPath == "" {
+		fmt.Println("Using: embedded defaults")
+	} else {
+		fmt.Printf("Using: %s\n", usedPath)
+	}
+
+	fmt.Println()
+
+	jsonOutput, err := cfg.ToJSON()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error serializing config: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Config:")
+	fmt.Println(string(jsonOutput))
 }

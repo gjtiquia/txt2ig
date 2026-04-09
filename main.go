@@ -26,7 +26,12 @@ func main() {
 func runCommand(c *cli.CLI, cmd string) {
 	// Kong returns command strings like "init", "convert <file>", "web"
 	// Extract just the command name
-	cmdName := strings.Fields(cmd)[0]
+	var cmdName string
+	if cmd == "" {
+		cmdName = "default"
+	} else {
+		cmdName = strings.Fields(cmd)[0]
+	}
 
 	switch cmdName {
 	case "init":

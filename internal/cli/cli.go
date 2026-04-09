@@ -11,11 +11,12 @@ type ConvertCmd struct {
 	InputFile string `arg:"" name:"file" help:"Text file to convert" type:"existingfile"`
 	Output    string `short:"o" help:"Output file name (.jpg or .png)" type:"path"`
 	Config    string `short:"c" long:"config" help:"Custom config file" type:"existingfile"`
+	Watch     bool   `short:"w" long:"watch" help:"Watch file and regenerate on save"`
+	Port      int    `short:"p" long:"port" help:"Port for web preview (requires --watch)"`
 }
 
 type WebCmd struct {
-	Port  int    `short:"p" long:"port" help:"Port to run server on" default:"3000"`
-	Watch string `short:"w" long:"watch" help:"File to watch for changes" type:"existingfile"`
+	Port int `short:"p" long:"port" default:"3000" help:"Port to run server on"`
 }
 
 func Parse(args []string) (*CLI, error) {

@@ -8,6 +8,7 @@ import (
 	"github.com/gjtiquia/txt2ig/internal/cli"
 	"github.com/gjtiquia/txt2ig/internal/config"
 	"github.com/gjtiquia/txt2ig/internal/renderer"
+	"github.com/gjtiquia/txt2ig/internal/watch"
 	"github.com/gjtiquia/txt2ig/internal/web"
 )
 
@@ -20,7 +21,11 @@ func main() {
 
 	switch {
 	case cliArgs.Convert.InputFile != "":
-		runConvert(&cliArgs.Convert)
+		if cliArgs.Convert.Watch {
+			runWatch(&cliArgs.Convert)
+		} else {
+			runConvert(&cliArgs.Convert)
+		}
 	case true:
 		runWeb(&cliArgs.Web)
 	}
@@ -52,11 +57,26 @@ func runConvert(cmd *cli.ConvertCmd) {
 	fmt.Printf("Successfully created %s\n", outputPath)
 }
 
+func runWatch(cmd *cli.ConvertCmd) {
+	server, err := watch.NewServer(cmd.InputFile, cmd.Config)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating server: %v\n", err)
+		os.Exit(1)
+	}
+
+	port := 0
+	if cmd.Port > 0 {
+		port = cmd.Port
+	}
+
+	if err := server.Run(port); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
 func runWeb(cmd *cli.WebCmd) {
 	server := web.NewServer()
-	if cmd.Watch != "" {
-		server = server.WithWatch(cmd.Watch)
-	}
 	if err := server.Run(cmd.Port); err != nil {
 		fmt.Fprintf(os.Stderr, "Error starting web server: %v\n", err)
 		os.Exit(1)

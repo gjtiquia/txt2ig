@@ -13,13 +13,14 @@ import (
 )
 
 type Server struct {
-	watchedFile string
-	outputPath  string
-	configFile  string
-	config      *config.Config
-	watcher     *FileWatcher
-	sseHub      *SSEHub
-	port        int
+	watchedFile    string
+	outputPath     string
+	configFile     string
+	usedConfigPath string
+	config         *config.Config
+	watcher        *FileWatcher
+	sseHub         *SSEHub
+	port           int
 }
 
 func NewServer(watchedFile, configFile string) (*Server, error) {
@@ -33,10 +34,13 @@ func NewServer(watchedFile, configFile string) (*Server, error) {
 		return nil, fmt.Errorf("load config: %w", err)
 	}
 
+	usedConfigPath := loader.UsedPath()
+
 	return &Server{
-		watchedFile: watchedFile,
-		configFile:  configFile,
-		config:      cfg,
+		watchedFile:    watchedFile,
+		configFile:     configFile,
+		usedConfigPath: usedConfigPath,
+		config:         cfg,
 	}, nil
 }
 
@@ -60,11 +64,19 @@ func (s *Server) Run(port int) error {
 		return fmt.Errorf("watch file: %w", err)
 	}
 
+	if s.usedConfigPath != "" {
+		if err := s.watcher.Watch(s.usedConfigPath, s.handleConfigChange); err != nil {
+			log.Printf("WARN: Failed to watch config file: %v\n", err)
+		}
+	}
+
 	fmt.Printf("Watching: %s\n", filepath.Base(s.watchedFile))
 	fmt.Printf("Output: %s\n", filepath.Base(s.outputPath))
 
-	if configFile := s.getConfigName(); configFile != "" {
-		fmt.Printf("Config: %s\n", configFile)
+	if s.usedConfigPath != "" {
+		fmt.Printf("Config: %s\n", filepath.Base(s.usedConfigPath))
+	} else {
+		fmt.Println("Config: (using embedded defaults)")
 	}
 
 	if port > 0 {
@@ -88,7 +100,39 @@ func (s *Server) Run(port int) error {
 func (s *Server) handleFileChange(path string) {
 	log.Printf("File changed: %s, regenerating...\n", path)
 	if err := s.regenerateImage(); err != nil {
-		log.Printf("regenerate: %v", err)
+		log.Printf("regenerate: %v\n", err)
+		if s.sseHub != nil {
+			s.sseHub.Broadcast(SSEMessage{
+				Type:  "error",
+				Error: fmt.Sprintf("Failed to regenerate: %v", err),
+			})
+		}
+	}
+}
+
+func (s *Server) handleConfigChange(path string) {
+	log.Printf("Config file changed: %s, reloading...\n", filepath.Base(path))
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		log.Println("Config file removed, falling back to defaults")
+		s.config = config.DefaultConfig()
+	} else {
+		loader := config.NewConfigLoader()
+		if s.configFile != "" {
+			loader.SetCustomPath(s.configFile)
+		}
+
+		cfg, err := loader.Load()
+		if err != nil {
+			log.Printf("Failed to reload config: %v, using defaults\n", err)
+			s.config = config.DefaultConfig()
+		} else {
+			s.config = cfg
+		}
+	}
+
+	if err := s.regenerateImage(); err != nil {
+		log.Printf("Regenerate error: %v\n", err)
 		if s.sseHub != nil {
 			s.sseHub.Broadcast(SSEMessage{
 				Type:  "error",
@@ -149,36 +193,6 @@ func (s *Server) startWebServer(port int) error {
 	log.Printf("Starting web server on http://localhost%s\n", addr)
 
 	return http.ListenAndServe(addr, handler)
-}
-
-func (s *Server) getConfigName() string {
-	if s.configFile != "" {
-		return filepath.Base(s.configFile)
-	}
-
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-
-	xdgConfig := os.Getenv("XDG_CONFIG_HOME")
-	if xdgConfig == "" {
-		xdgConfig = filepath.Join(home, ".config")
-	}
-
-	paths := []string{
-		".txt2igconfig.jsonc",
-		filepath.Join(xdgConfig, "txt2ig", "config.jsonc"),
-		filepath.Join(home, ".txt2ig", "config.jsonc"),
-	}
-
-	for _, path := range paths {
-		if _, err := os.Stat(path); err == nil {
-			return filepath.Base(path)
-		}
-	}
-
-	return "default"
 }
 
 func (s *Server) loggingMiddleware(next http.Handler) http.Handler {

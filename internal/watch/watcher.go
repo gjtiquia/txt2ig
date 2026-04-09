@@ -42,7 +42,7 @@ func (w *FileWatcher) Start() {
 				if !ok {
 					return
 				}
-				if event.Has(fsnotify.Write) {
+				if event.Has(fsnotify.Write) || event.Has(fsnotify.Remove) {
 					w.handleEvent(event.Name)
 				}
 			case err, ok := <-w.watcher.Errors:

@@ -34,7 +34,13 @@ func (s *Server) handlePreview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fileName := filepath.Base(s.watchedFile)
-	configName := s.getConfigName()
+
+	var configName string
+	if s.usedConfigPath != "" {
+		configName = filepath.Base(s.usedConfigPath)
+	} else {
+		configName = "(default)"
+	}
 
 	pages.Preview(fileName, configName, base64).Render(r.Context(), w)
 }

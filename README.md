@@ -2,9 +2,11 @@
 
 ![example.jpg](./example/example.jpg)
 
-a cli tool to convert text files to images with plain text, ready for posting to instagram
+cli to convert text to plain text image
 
-meant to be dead simple, intuitive config
+terminal content creation for instagram
+
+simple workflow, simple config
 
 > not to be confused with `txt2img` for ai image gen
 

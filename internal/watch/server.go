@@ -44,6 +44,10 @@ func (s *Server) Run(port int) error {
 	outputPath := renderer.DetermineOutputPath(s.watchedFile, "")
 	s.outputPath = outputPath
 
+	if port > 0 {
+		s.sseHub = NewSSEHub()
+	}
+
 	watcher, err := NewFileWatcher()
 	if err != nil {
 		return fmt.Errorf("create file watcher: %w", err)
@@ -120,7 +124,7 @@ func (s *Server) regenerateImage() error {
 
 		s.sseHub.Broadcast(SSEMessage{
 			Type: "image",
-			HTML: fmt.Sprintf(`<img src="data:image/png;base64,%s" alt="Preview" class="w-full h-auto border border-gray-700 rounded">`, base64),
+			HTML: fmt.Sprintf(`<img src="data:image/png;base64,%s" alt="Preview" class="w-full h-auto border border-gray-700 rounded" id="preview-image">`, base64),
 		})
 	}
 
@@ -135,8 +139,6 @@ func (s *Server) startWebServer(port int) error {
 		return fmt.Errorf("port %d is already in use", port)
 	}
 	listener.Close()
-
-	s.sseHub = NewSSEHub()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", s.handlePreview)

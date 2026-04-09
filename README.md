@@ -33,128 +33,36 @@ GOPROXY=direct go install github.com/gjtiquia/txt2ig@latest
 GOBIN=$(pwd) go install github.com/gjtiquia/txt2ig@latest
 ```
 
-## features
-
-- ✅ **text to image**: convert plain text files to images
-- ✅ **multiple formats**: output as JPG or PNG (auto-detected from file extension)
-- ✅ **configurable**: customize appearance with JSONC config files
-- ✅ **font fallback**: supports fonts with fallback chain, embedded GoMono as final fallback
-- ✅ **text wrapping**: automatic text wrapping with configurable width
-- ✅ **newline preservation**: respects newlines in input, preserves paragraph structure
-- ✅ **processors**: pre-processors for text transformation, post-processors for styling
-- ✅ **simple CLI**: minimal flags, helpful defaults
-- ✅ **watch mode**: live preview with automatic regeneration on file save
-
 ## usage
 
+### cli
+
 ```bash
-# basic usage
-# searches for my-post.md on the same directory
-# if exists, creates my-post.jpg (supports .jpg and .png)
-txt2ig my-post.md
+# generate image with default config
+# (see config section below on customizing config)
+txt2ig post.md # output: post.jpg
 
-# output flag
-# set the output file name
-# (supports .jpg and .png extensions)
-txt2ig my-post.md -o another-name.png
-
-# supports any plain text file
-# supports relative and absolute paths
-txt2ig ./src/post.txt -o ~/Downloads/img.jpg
-
-# supports custom config
-txt2ig post.md --config ./custom-config.jsonc
-txt2ig post.md -c ./custom-config.jsonc
-
-# debug currently used config
-txt2ig --debug
-
-# create a default config file for quick customization
-txt2ig init
-# creates .txt2igconfig.jsonc in current directory
-
-# init with custom output path
-txt2ig init -o my-config.jsonc
-
-# init with force overwrite
-txt2ig init --force
-
-# and of cuz, a helpful help menu
-txt2ig -help
-txt2ig -h
+# set output file name and extension (.jpg and .png only)
+txt2ig post.md -o another-name.png
 
 # watch mode: regenerate image on file save
-# watches post.md and regenerates post.jpg every time you save
-txt2ig post.md -w
-txt2ig post.md --watch
-
-# watch mode with web preview
-# watches post.md, regenerates post.jpg, and shows live preview at localhost:3000
-txt2ig post.md -w --port 3000
-txt2ig post.md --watch -p 3000
-
-# watch mode with custom output and config
-txt2ig post.md -w -o output.png -c custom.jsonc
-```
-
-## web server
-
-Start a web server for converting text to images:
-
-```bash
-# start on port 3000 (default)
-txt2ig web
-
-# start on custom port
-txt2ig web --port 8080
-
-# short form
-txt2ig web -p 8080
-```
-
-Features:
-- Mobile-friendly interface
-- Auto-save config and text to LocalStorage
-- Preview image before download
-- Real-time validation
-- Download image as PNG
-
-Note: If the port is already in use, the server will fail with an error message.
-
-## watch mode
-
-Watch a file for changes and automatically regenerate the image:
-
-```bash
-# basic watch mode
-# watches post.md and regenerates post.jpg on every save
 txt2ig post.md -w
 
-# watch mode with live web preview
-# shows live preview in browser at http://localhost:3000
-txt2ig post.md -w --port 3000
+# watch mode with web live preview at port 3000
+txt2ig post.md -w -p 3000
 
-# custom output file
-txt2ig post.md -w -o custom.png
-
-# custom config
-txt2ig post.md -w -c custom.jsonc
+# see help for more
+txt2ig -h
 ```
 
-Behavior:
-- **Default format**: JPG (e.g., `post.md` → `post.jpg`)
-- **Custom format**: Specify `-o custom.png` to use PNG
-- **Live preview**: With `--port`, opens web preview that updates automatically
-- **File regeneration**: Always regenerates image file on save, even with web preview
-- **Port conflicts**: Fails with error if port is already in use
-- **Stop**: Press `Ctrl+C` to stop watching
+### web app
 
-Web preview features:
-- Live-updating image
-- Config file name display
-- Connection status indicator
-- Download button
-- Manual browser open (no auto-launch)
+for creating plain text images on the browser
+
+```bash
+# serve web app at port 3000
+txt2ig web -p 3000
+```
 
 ## config
 
@@ -163,12 +71,14 @@ config is a simple jsonc (JSON with Comments) file
 ### quick start
 
 ```bash
-# create a default config file to customize
+# generate config file in current directory
 txt2ig init
-# creates .txt2igconfig.jsonc in current directory
 
-# or specify a custom path
-txt2ig init -o my-config.jsonc
+# edit config file
+vim .txt2igconfig.jsonc
+
+# use custom config file
+txt2ig post.md
 ```
 
 ### config location
@@ -180,12 +90,15 @@ txt2ig will look for config file in the following order
 - global: `~/.txt2ig/config.jsonc`
 - use defaults
 
+run the following command to check which config is currently in-use
+```bash
+txt2ig --debug
+```
+
 ### config params
 
 the following are the default config params,
 feel free to copy and paste this to your own config and override what you need
-
-**note**: newlines in your input file are always preserved. text wrapping happens within each line/paragraph separately. empty lines create spacing between paragraphs.
 
 ```jsonc
 {
@@ -219,7 +132,7 @@ feel free to copy and paste this to your own config and override what you need
     // line height multiplier (1.4 = 1.4x font size)
     "lineHeight": 1.4,
 
-    // processors will run in sequence, 
+    // processors will run in sequence,
     // you may chain several processors of the same name to get different results if you so desire
 
     // typically pre-process text
@@ -276,83 +189,6 @@ feel free to copy and paste this to your own config and override what you need
 }
 ```
 
-## examples
-
-### basic example
-
-create a text file `post.md`:
-
-```md
-# My First Post
-
-This is my first post!
-
-Features:
-- Simple text
-- Clean output
-- Ready for Instagram
-```
-
-run the tool:
-
-```bash
-txt2ig post.md
-# creates post.jpg in the same directory
-```
-
-### with custom colors
-
-```jsonc
-{
-    "fontFamily": {
-        "regular": ["GoMono"],
-        "bold": ["GoMonoBold"],
-        "italic": ["GoMonoItalic"],
-        "boldItalic": ["GoMonoBoldItalic"]
-    },
-    "fontSize": 20,
-    "bgColor": "#1E1E1E",
-    "fontColor": "#00FF00",
-    "screenSize": [1080, 1920]
-}
-```
-
-### with text wrapping disabled
-
-```jsonc
-{
-    "textWrap": false,
-    "fontSize": 16
-}
-```
-
-## development
-
-### run tests
-
-```bash
-# run all tests
-go test ./...
-
-# run with coverage
-go test -cover ./...
-
-# run specific package
-go test ./internal/renderer -v
-```
-
-### build
-
-```bash
-# build for current platform
-go build -o txt2ig
-
-# build for specific platform
-GOOS=linux GOARCH=amd64 go build -o txt2ig
-GOOS=darwin GOARCH=amd64 go build -o txt2ig
-GOOS=windows GOARCH=amd64 go build -o txt2ig.exe
-```
-
 ## future roadmap
 
 ### plugin system
@@ -362,10 +198,6 @@ a way to build 3rd party plugins in addition to the official plugins available
 - post-processors
 
 perhaps look into go plugins...? see how gonotify does it
-
-## tech stack
-
-- golang
 
 ## ai-usage disclosure
 

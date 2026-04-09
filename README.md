@@ -1,6 +1,6 @@
 # txt2ig
 
-![test-bash](https://github.com/user-attachments/assets/fc598510-7b30-4fd4-a9ab-827815d34a2c)
+![example.jpg](./example/example.jpg)
 
 a cli tool to convert text files to images with plain text, ready for posting to instagram
 
@@ -80,6 +80,8 @@ vim .txt2igconfig.jsonc
 # use custom config file
 txt2ig post.md
 ```
+
+see [`/example/`](./example/)
 
 ### config location
 

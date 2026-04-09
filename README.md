@@ -32,6 +32,7 @@ GOPROXY=direct go install github.com/gjtiquia/txt2ig@latest
 # installs binary at current directory instead of a global install
 GOBIN=$(pwd) go install github.com/gjtiquia/txt2ig@latest
 ```
+</details>
 
 ## usage
 

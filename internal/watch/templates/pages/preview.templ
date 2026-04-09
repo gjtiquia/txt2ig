@@ -15,6 +15,8 @@ templ Preview(fileName, configName, imageBase64 string) {
 				<span class="text-gray-400 text-sm">Disconnected</span>
 			</div>
 			
+			<div id="image-data" data-base64={ imageBase64 } class="hidden"></div>
+			
 			<div class="mb-4">
 				<img 
 					src={ "data:image/png;base64," + imageBase64 }
@@ -38,12 +40,14 @@ templ Preview(fileName, configName, imageBase64 string) {
 		</div>
 		
 		<script>
+			let currentImageBase64 = document.getElementById('image-data').dataset.base64 || '';
+			
 			document.getElementById('timestamp').textContent = new Date().toLocaleTimeString();
 			
 			const downloadBtn = document.getElementById('download-btn');
 			downloadBtn.onclick = function() {
 				const link = document.createElement('a');
-				link.href = 'data:image/png;base64,' + imageBase64;
+				link.href = 'data:image/png;base64,' + currentImageBase64;
 				link.download = 'image.png';
 				link.click();
 			};
@@ -69,6 +73,13 @@ templ Preview(fileName, configName, imageBase64 string) {
 				const data = JSON.parse(e.data);
 				if (data.type === 'image') {
 					document.getElementById('preview-image').outerHTML = data.html;
+					
+					const srcMatch = data.html.match(/src="data:image\/png;base64,([^"]+)"/);
+					if (srcMatch) {
+						currentImageBase64 = srcMatch[1];
+						document.getElementById('image-data').dataset.base64 = srcMatch[1];
+					}
+					
 					document.getElementById('timestamp').textContent = new Date().toLocaleTimeString();
 				} else if (data.type === 'error') {
 					alert('Error: ' + data.error);

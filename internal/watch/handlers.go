@@ -1,6 +1,8 @@
 package watch
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -49,5 +51,43 @@ func (s *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 		f.Flush()
 	}
 
+	s.sendInitialImage(w)
+
 	<-r.Context().Done()
+}
+
+func (s *Server) sendInitialImage(w http.ResponseWriter) {
+	text, err := os.ReadFile(s.watchedFile)
+	if err != nil {
+		return
+	}
+
+	rend := renderer.NewRenderer(s.config)
+	defer rend.Close()
+
+	img, err := rend.RenderString(string(text))
+	if err != nil {
+		return
+	}
+
+	base64, err := renderer.EncodeImage(img, "png")
+	if err != nil {
+		return
+	}
+
+	data, err := json.Marshal(SSEMessage{
+		Type: "image",
+		HTML: fmt.Sprintf(`<img src="data:image/png;base64,%s" alt="Preview" class="w-full h-auto border border-gray-700 rounded" id="preview-image">`, base64),
+	})
+	if err != nil {
+		return
+	}
+
+	w.Write([]byte("data: "))
+	w.Write(data)
+	w.Write([]byte("\n\n"))
+
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+	}
 }

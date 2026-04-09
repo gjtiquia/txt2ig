@@ -69,20 +69,33 @@ func Preview(fileName, configName, imageBase64 string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</p></div><div id=\"connection-status\" class=\"mb-4 flex items-center gap-2\"><div class=\"rounded-full w-3 h-3 bg-red-500\"></div><span class=\"text-gray-400 text-sm\">Disconnected</span></div><div class=\"mb-4\"><img src=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</p></div><div id=\"connection-status\" class=\"mb-4 flex items-center gap-2\"><div class=\"rounded-full w-3 h-3 bg-red-500\"></div><span class=\"text-gray-400 text-sm\">Disconnected</span></div><div id=\"image-data\" data-base64=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs("data:image/png;base64," + imageBase64)
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(imageBase64)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/preview.templ`, Line: 20, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/preview.templ`, Line: 18, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" alt=\"Preview\" class=\"w-full h-auto border border-gray-700 rounded\" id=\"preview-image\"></div><button class=\"bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mb-4\" id=\"download-btn\">Download PNG</button><div class=\"mt-4 text-gray-500 text-sm\"><p id=\"status\">Last updated: <span id=\"timestamp\"></span></p><p>Press Ctrl+C to stop</p></div></div><script>\n\t\t\tdocument.getElementById('timestamp').textContent = new Date().toLocaleTimeString();\n\t\t\t\n\t\t\tconst downloadBtn = document.getElementById('download-btn');\n\t\t\tdownloadBtn.onclick = function() {\n\t\t\t\tconst link = document.createElement('a');\n\t\t\t\tlink.href = 'data:image/png;base64,' + imageBase64;\n\t\t\t\tlink.download = 'image.png';\n\t\t\t\tlink.click();\n\t\t\t};\n\t\t\t\n\t\t\tconst eventSource = new EventSource('/sse');\n\t\t\t\n\t\t\tconst dot = document.querySelector('#connection-status .rounded-full');\n\t\t\tconst text = document.querySelector('#connection-status span');\n\t\t\t\n\t\t\teventSource.onopen = function() {\n\t\t\t\tdot.classList.remove('bg-red-500');\n\t\t\t\tdot.classList.add('bg-green-500');\n\t\t\t\ttext.textContent = 'Connected';\n\t\t\t};\n\t\t\t\n\t\t\teventSource.onerror = function() {\n\t\t\t\tdot.classList.remove('bg-green-500');\n\t\t\t\tdot.classList.add('bg-red-500');\n\t\t\t\ttext.textContent = 'Disconnected';\n\t\t\t};\n\t\t\t\n\t\t\teventSource.addEventListener('message', function(e) {\n\t\t\t\tconst data = JSON.parse(e.data);\n\t\t\t\tif (data.type === 'image') {\n\t\t\t\t\tdocument.getElementById('preview-image').outerHTML = data.html;\n\t\t\t\t\tdocument.getElementById('timestamp').textContent = new Date().toLocaleTimeString();\n\t\t\t\t} else if (data.type === 'error') {\n\t\t\t\t\talert('Error: ' + data.error);\n\t\t\t\t}\n\t\t\t});\n\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"hidden\"></div><div class=\"mb-4\"><img src=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var6 string
+			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("data:image/png;base64," + imageBase64)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/preview.templ`, Line: 22, Col: 49}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" alt=\"Preview\" class=\"w-full h-auto border border-gray-700 rounded\" id=\"preview-image\"></div><button class=\"bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mb-4\" id=\"download-btn\">Download PNG</button><div class=\"mt-4 text-gray-500 text-sm\"><p id=\"status\">Last updated: <span id=\"timestamp\"></span></p><p>Press Ctrl+C to stop</p></div></div><script>\n\t\t\tlet currentImageBase64 = document.getElementById('image-data').dataset.base64 || '';\n\t\t\t\n\t\t\tdocument.getElementById('timestamp').textContent = new Date().toLocaleTimeString();\n\t\t\t\n\t\t\tconst downloadBtn = document.getElementById('download-btn');\n\t\t\tdownloadBtn.onclick = function() {\n\t\t\t\tconst link = document.createElement('a');\n\t\t\t\tlink.href = 'data:image/png;base64,' + currentImageBase64;\n\t\t\t\tlink.download = 'image.png';\n\t\t\t\tlink.click();\n\t\t\t};\n\t\t\t\n\t\t\tconst eventSource = new EventSource('/sse');\n\t\t\t\n\t\t\tconst dot = document.querySelector('#connection-status .rounded-full');\n\t\t\tconst text = document.querySelector('#connection-status span');\n\t\t\t\n\t\t\teventSource.onopen = function() {\n\t\t\t\tdot.classList.remove('bg-red-500');\n\t\t\t\tdot.classList.add('bg-green-500');\n\t\t\t\ttext.textContent = 'Connected';\n\t\t\t};\n\t\t\t\n\t\t\teventSource.onerror = function() {\n\t\t\t\tdot.classList.remove('bg-green-500');\n\t\t\t\tdot.classList.add('bg-red-500');\n\t\t\t\ttext.textContent = 'Disconnected';\n\t\t\t};\n\t\t\t\n\t\t\teventSource.addEventListener('message', function(e) {\n\t\t\t\tconst data = JSON.parse(e.data);\n\t\t\t\tif (data.type === 'image') {\n\t\t\t\t\tdocument.getElementById('preview-image').outerHTML = data.html;\n\t\t\t\t\t\n\t\t\t\t\tconst srcMatch = data.html.match(/src=\"data:image\\/png;base64,([^\"]+)\"/);\n\t\t\t\t\tif (srcMatch) {\n\t\t\t\t\t\tcurrentImageBase64 = srcMatch[1];\n\t\t\t\t\t\tdocument.getElementById('image-data').dataset.base64 = srcMatch[1];\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\tdocument.getElementById('timestamp').textContent = new Date().toLocaleTimeString();\n\t\t\t\t} else if (data.type === 'error') {\n\t\t\t\t\talert('Error: ' + data.error);\n\t\t\t\t}\n\t\t\t});\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -189,6 +189,22 @@ feel free to copy and paste this to your own config and override what you need
 }
 ```
 
+## development
+
+```bash
+# generate templ components
+templ generate
+
+# run tests
+go test ./...
+
+# run cli
+go run .
+
+# build cli
+go build .
+```
+
 ## future roadmap
 
 ### plugin system

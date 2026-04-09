@@ -26,17 +26,25 @@ type WebCmd struct {
 	Port int `short:"p" long:"port" default:"3000" help:"Port to run server on"`
 }
 
-func Parse(args []string) (*CLI, error) {
+type ParsedCLI struct {
+	Cli     *CLI
+	Command string
+}
+
+func Parse(args []string) (*ParsedCLI, error) {
 	var cli CLI
 	parser, err := kong.New(&cli, kong.Name("txt2ig"), kong.Description("Convert text files to images for Instagram"))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = parser.Parse(args)
+	ctx, err := parser.Parse(args)
 	if err != nil {
 		return nil, err
 	}
 
-	return &cli, nil
+	return &ParsedCLI{
+		Cli:     &cli,
+		Command: ctx.Command(),
+	}, nil
 }

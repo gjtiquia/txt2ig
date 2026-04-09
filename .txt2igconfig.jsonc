@@ -1,0 +1,86 @@
+{
+    // font family configuration with bold/italic variants
+    // supports font names and file paths with fallback chain
+    // embedded GoMono variants available: GoMono, GoMonoBold, GoMonoItalic, GoMonoBoldItalic
+    "fontFamily": {
+        "regular": ["GoMono"],
+        "bold": ["GoMonoBold"],
+        "italic": ["GoMonoItalic"],
+        "boldItalic": ["GoMonoBoldItalic"]
+    },
+    // unit: px
+    "fontSize": 32,
+    "fontColor": "#FFFFFF",
+    "bgColor": "#000000",
+    // text x-axis position within the text box
+    "textJustify": "left", // "center", "right"
+    // text box (bounding box of text) x-axis position on screen
+    "textBoxJustify": "center", // "left", "right"
+    // text box (bounding box of text) y-axis position on screen
+    "textBoxAlign": "center", // "top", "bottom"
+    // text box (bounding box of text) (x, y) offset. unit: px
+    "textBoxOffset": [0, 0],
+    // maximum width for text box. unit: px. 0 = auto (90% of screen width)
+    "textBoxMaxWidth": 972,
+    // screen/canvas size. [width, height]. unit: px
+    "screenSize": [1080, 1920],
+    // enable automatic text wrapping
+    "textWrap": true,
+    // line height multiplier (1.4 = 1.4x font size)
+    "lineHeight": 1.4,
+
+    // processors will run in sequence,
+    // you may chain several processors of the same name to get different results if you so desire
+
+    // typically pre-process text
+    "preProcessors": [
+        // {
+        //     "exactSearchAndReplace": {
+        //         "searchString": "apple", // exact match only
+        //         "replaceString": "bananas",
+        //     }
+        // }
+
+        // {
+        //     "grepSearchAndReplace": {
+        //         "pattern": "^@foo",
+        //         "replaceString": "bar",
+        //     }
+        // }
+
+        // {
+        //     "exactSearchAndReplaceWithDateTimeNow": {
+        //         "searchString": "@date",
+        //         "replaceFormat": "yyyy-mm-dd", // supports yyyy, mm, dd, hh, mm, ss
+        //     }
+        // }
+    ],
+
+    // typically post-process styling
+    "postProcessors": [
+        {
+            // lines starting with # will be bold
+            "markdown-bold-headers": {
+                "bold": true,
+                // set to empty to use the same default color
+                "fontColor": "#EC9006" // orange
+            }
+        },
+
+        // {
+        //      // lines starting with # will be italic and different color
+        //     "bash-comments": {
+        //         "italic": true,
+        //         "fontColor": "#CCCCCC" // gray
+        //     }
+        // }
+
+        {
+            // highlights bash code blocks with Chroma syntax highlighting
+            "bash-code-highlighting": {
+                "style": "monokai", // Chroma style (monokai, dracula, github, etc.)
+                "defaultColor": "#FFFFFF" // fallback color when Chroma doesn't provide one
+            }
+        },
+    ],
+}

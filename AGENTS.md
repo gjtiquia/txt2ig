@@ -12,7 +12,6 @@ Context and conventions for AI agents working on txt2ig.
 2. **YAGNI (You Ain't Gonna Need It)**: Don't build features until you actually need them
 3. **Boring is Good**: Use standard libraries, well-known patterns, minimal dependencies
 4. **No Premature Abstractions**: Don't generalize until you've seen the pattern 3+ times
-5. **Stateless is Better**: Prefer stateless architectures over stateful ones
 
 ### Grug Brain Rules
 
@@ -76,30 +75,6 @@ type StyledLine struct {
     Segments []StyledSegment  // Multiple styles per line
 }
 ```
-
-### Technical Decisions Made
-
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Config format | JSONC | Familiar, supports comments, trailing commas |
-| CLI framework | Kong | Declarative, minimal, boring |
-| Font rendering | golang.org/x/image | Standard library extension, no external deps |
-| Syntax highlighting | Chroma | Battle-tested, 70+ styles, active maintenance |
-| Per-line vs per-token styling | **Per-token** | True syntax highlighting requires token-level colors |
-| Stateful processors | Yes, for code blocks | Multi-line state needed for code block detection |
-| Embedded fonts | GoMono variants | Guaranteed availability, no system dependencies |
-| Warning logging | Go's `log` package | Standard library, timestamps to stderr, boring |
-
-### Future Decisions (Not Yet Implemented)
-
-| Feature | Decision | Rationale |
-|---------|----------|-----------|
-| Web server | Go stdlib `net/http` | Minimal, no framework needed, boring |
-| Templates | Templ | Type-safe, Go-native, compile-time checks |
-| Frontend interactions | HTMX 2.x | AJAX without JavaScript, SSR-friendly |
-| CSS | Tailwind CDN | No npm, no build step, mobile-first |
-| State management | Stateless (base64 images) | No server storage, no cleanup, simple |
-| Image storage | None (stateless) | Generate on demand, stream to response |
 
 ## Code Conventions
 
@@ -311,7 +286,7 @@ func (m *Manager) loadEmbedded(name string) *Font {
 3. **Styled segments**: Each token can have its own style, not one style per line
 4. **Font variants**: Bold text requires bold font face, not just style flag
 
-### Web Server Gotchas (Future)
+### Web Server Gotchas
 
 1. **Templ generation**: Must run `templ generate` before build
 2. **Base64 images**: Encode as data URL, not raw base64
@@ -347,47 +322,6 @@ txt2ig test.md -o output.jpg
 - **Not needed**: Premature optimization is root of all evil
 - **Measure first**: Only optimize when there's a measured problem
 - **Keep it simple**: Prefer readable code over fast code
-
-## Future Roadmap
-
-### Phase 1: Web Server (Next)
-
-**Goal**: Mobile-centric web interface for txt2ig
-
-**Architecture**: Stateless SSR with Templ + HTMX
-
-**Endpoints**:
-- `GET /` - Form with text + config textareas
-- `POST /convert` - Generate image, return HTML with base64 image
-
-**Tech**:
-- Go stdlib `net/http`
-- Templ templates
-- HTMX 2.x (CDN)
-- Tailwind CSS (CDN)
-- LocalStorage for config persistence
-
-**Principles**:
-- No server state (no cache, no UUIDs)
-- Generate image on demand, embed as base64
-- Mobile-first design
-- Instant download with preview
-
-### Phase 2: Hot-Reload Preview (Later)
-
-**Goal**: Watch file changes, preview in browser
-
-**Architecture**: File watcher + WebSocket
-
-**Not Started**: Waiting for Phase 1 completion
-
-### Phase 3: Plugin System (Future)
-
-**Goal**: Third-party processors
-
-**Architecture**: Go plugins or shared libraries
-
-**Not Started**: Waiting for mature use cases
 
 ## Questions to Ask User
 

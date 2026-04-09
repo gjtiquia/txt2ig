@@ -32,7 +32,18 @@ GOPROXY=direct go install github.com/gjtiquia/txt2ig@latest
 # installs binary at current directory instead of a global install
 GOBIN=$(pwd) go install github.com/gjtiquia/txt2ig@latest
 ```
-</details>
+
+## features
+
+- ✅ **text to image**: convert plain text files to images
+- ✅ **multiple formats**: output as JPG or PNG (auto-detected from file extension)
+- ✅ **configurable**: customize appearance with JSONC config files
+- ✅ **font fallback**: supports fonts with fallback chain, embedded GoMono as final fallback
+- ✅ **text wrapping**: automatic text wrapping with configurable width
+- ✅ **newline preservation**: respects newlines in input, preserves paragraph structure
+- ✅ **processors**: pre-processors for text transformation, post-processors for styling
+- ✅ **simple CLI**: minimal flags, helpful defaults
+- ✅ **watch mode**: live preview with automatic regeneration on file save
 
 ## usage
 
@@ -71,6 +82,19 @@ txt2ig init --force
 # and of cuz, a helpful help menu
 txt2ig -help
 txt2ig -h
+
+# watch mode: regenerate image on file save
+# watches post.md and regenerates post.jpg every time you save
+txt2ig post.md -w
+txt2ig post.md --watch
+
+# watch mode with web preview
+# watches post.md, regenerates post.jpg, and shows live preview at localhost:3000
+txt2ig post.md -w --port 3000
+txt2ig post.md --watch -p 3000
+
+# watch mode with custom output and config
+txt2ig post.md -w -o output.png -c custom.jsonc
 ```
 
 ## web server
@@ -94,6 +118,43 @@ Features:
 - Preview image before download
 - Real-time validation
 - Download image as PNG
+
+Note: If the port is already in use, the server will fail with an error message.
+
+## watch mode
+
+Watch a file for changes and automatically regenerate the image:
+
+```bash
+# basic watch mode
+# watches post.md and regenerates post.jpg on every save
+txt2ig post.md -w
+
+# watch mode with live web preview
+# shows live preview in browser at http://localhost:3000
+txt2ig post.md -w --port 3000
+
+# custom output file
+txt2ig post.md -w -o custom.png
+
+# custom config
+txt2ig post.md -w -c custom.jsonc
+```
+
+Behavior:
+- **Default format**: JPG (e.g., `post.md` → `post.jpg`)
+- **Custom format**: Specify `-o custom.png` to use PNG
+- **Live preview**: With `--port`, opens web preview that updates automatically
+- **File regeneration**: Always regenerates image file on save, even with web preview
+- **Port conflicts**: Fails with error if port is already in use
+- **Stop**: Press `Ctrl+C` to stop watching
+
+Web preview features:
+- Live-updating image
+- Config file name display
+- Connection status indicator
+- Download button
+- Manual browser open (no auto-launch)
 
 ## config
 
@@ -293,31 +354,6 @@ GOOS=windows GOARCH=amd64 go build -o txt2ig.exe
 ```
 
 ## future roadmap
-
-### serve tool on the web
-
-- designed for use on mobile, especially since workflow should be posting on instagram via mobile, so should be mobile centric
-- SSR web page
-- web page has a text area to type/paste text
-- web page has default config (from README) pasted in a text area, free to edit (eg. edit font size, processors etc.)
-- on press submit, it server side validates the params (especially the config) and returns relevant errors if any (exactly same as CLI)
-- if all ok, generates the image and returns the image for users to download
-
-```bash
-# spins up web server, on port 3000, serves web app for running txt2ig
-txt2ig web --port 3000
-```
-
-### hot-reload file watching preview support
-
-- spins up a web server which watches for file changes
-- previews image with canvas, as much as possible matching the exact image output without html drift
-
-```bash
-txt2ig -w post.md --port 3000
-# -w or --watch
-# -p or --port
-```
 
 ### plugin system
 

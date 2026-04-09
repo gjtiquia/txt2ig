@@ -3,6 +3,7 @@ package web
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 
@@ -31,6 +32,14 @@ func (s *Server) WithWatch(file string) *Server {
 }
 
 func (s *Server) Run(port int) error {
+	addr := fmt.Sprintf(":%d", port)
+
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("port %d is already in use", port)
+	}
+	listener.Close()
+
 	if s.watchedFile != "" {
 		if err := s.startWatcher(); err != nil {
 			return fmt.Errorf("start watcher: %w", err)
@@ -50,7 +59,6 @@ func (s *Server) Run(port int) error {
 
 	handler := loggingMiddleware(mux)
 
-	addr := fmt.Sprintf(":%d", port)
 	log.Printf("Starting web server on http://localhost%s\n", addr)
 	if s.watchedFile != "" {
 		log.Printf("Watching file: %s\n", s.watchedFile)

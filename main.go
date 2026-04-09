@@ -115,9 +115,6 @@ func runWatch(cmd *cli.ConvertCmd) {
 
 func runWeb(cmd *cli.WebCmd) {
 	server := web.NewServer()
-	if cmd.Watch != "" {
-		server = server.WithWatch(cmd.Watch)
-	}
 	if err := server.Run(cmd.Port); err != nil {
 		fmt.Fprintf(os.Stderr, "Error starting web server: %v\n", err)
 		os.Exit(1)
@@ -168,7 +165,7 @@ func printDebugInfo(loader *config.ConfigLoader, cfg *config.Config) {
 
 	jsonOutput, err := cfg.ToJSON()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error serialzing config: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error serializing config: %v\n", err)
 		os.Exit(1)
 	}
 

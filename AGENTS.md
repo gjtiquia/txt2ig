@@ -197,6 +197,12 @@ style: format code with gofmt
 5. **Check git status**: See what's been changed recently
 6. **Ask clarifying questions**: Don't assume, ask
 
+### Safety Rules
+
+- **Don't run dangerous commands**: Avoid `rm -rf`, `sudo`, or any destructive operations
+- **User trust is earned**: Don't assume user will accept all changes
+- **When in doubt, ask**: Better to ask than to execute something risky
+
 ### Communication Style
 
 - **Be concise**: Short sentences, no preamble

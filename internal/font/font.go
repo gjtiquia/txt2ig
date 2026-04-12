@@ -120,16 +120,17 @@ func (m *Manager) loadFontFromFile(path string) (*opentype.Font, error) {
 }
 
 func (m *Manager) loadSystemFont(fontName string) (*opentype.Font, error) {
-	// Common font directories on Unix-like systems
 	fontDirs := []string{
 		"/usr/share/fonts",
 		"/usr/local/share/fonts",
+		"/Library/Fonts",
+		"/System/Library/Fonts",
 	}
 
-	// Add user font directory if available
 	if homeDir, err := os.UserHomeDir(); err == nil {
 		fontDirs = append(fontDirs, filepath.Join(homeDir, ".local/share/fonts"))
 		fontDirs = append(fontDirs, filepath.Join(homeDir, ".fonts"))
+		fontDirs = append(fontDirs, filepath.Join(homeDir, "Library/Fonts"))
 	}
 
 	// Search for font files
@@ -144,7 +145,6 @@ func (m *Manager) loadSystemFont(fontName string) (*opentype.Font, error) {
 }
 
 func (m *Manager) findFontFile(dir string, fontName string) string {
-	// Common font file extensions
 	extensions := []string{".ttf", ".otf", ".TTF", ".OTF"}
 
 	// Try exact match with different extensions
@@ -155,31 +155,26 @@ func (m *Manager) findFontFile(dir string, fontName string) string {
 		}
 	}
 
-	// Try searching in subdirectories
+	// Search in subdirectories for exact filename match (case-sensitive)
+	var foundPath string
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
+		if err != nil || info.IsDir() {
 			return nil
 		}
-		if info.IsDir() {
-			return nil
-		}
-
-		// Check if filename contains font name (case-insensitive)
 		name := info.Name()
 		for _, ext := range extensions {
 			if filepath.Ext(name) == ext {
 				baseName := name[:len(name)-len(ext)]
 				if baseName == fontName {
-					return filepath.SkipDir // Found it, but we can't return path from Walk
+					foundPath = path
+					return filepath.SkipAll
 				}
 			}
 		}
 		return nil
 	})
 
-	// Note: This is a simplified implementation
-	// A full implementation would properly return the found path
-	return ""
+	return foundPath
 }
 
 func (m *Manager) loadGoMono(size float64, dpi float64) (font.Face, error) {

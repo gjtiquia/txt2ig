@@ -2,7 +2,9 @@
 
 ![example.jpg](./example/example.jpg)
 
-cli to convert text to plain text image
+text-to-instagram
+
+a cli tool to generate images with plain text
 
 terminal content creation for instagram
 

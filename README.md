@@ -38,6 +38,14 @@ GOBIN=$(pwd) go install github.com/gjtiquia/txt2ig@latest
 ```
 </details>
 
+### from source
+
+```bash
+git clone https://github.com/gjtiquia/txt2ig.git
+cd txt2ig
+go install .
+```
+
 ## usage
 
 ### cli

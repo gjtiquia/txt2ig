@@ -252,9 +252,12 @@ func ParsePostProcessorConfig(config interface{}) (PostProcessor, error) {
 		return nil, fmt.Errorf("processor config must be an object")
 	}
 
-	// Try each known processor type
 	if mdBold, ok := configMap["markdown-bold-headers"]; ok {
 		return parseMarkdownBoldHeaders(mdBold)
+	}
+
+	if mdLinks, ok := configMap["markdown-links"]; ok {
+		return parseMarkdownLinks(mdLinks)
 	}
 
 	if bashComments, ok := configMap["bash-comments"]; ok {
@@ -265,7 +268,6 @@ func ParsePostProcessorConfig(config interface{}) (PostProcessor, error) {
 		return parseBashCodeHighlighting(bashHighlight)
 	}
 
-	// Unknown processor type
 	for k := range configMap {
 		return nil, fmt.Errorf("unknown post-processor: %s", k)
 	}
@@ -290,6 +292,29 @@ func parseMarkdownBoldHeaders(config interface{}) (*MarkdownBoldHeaders, error) 
 		p.FontColor, ok = fontColor.(string)
 		if !ok {
 			return nil, fmt.Errorf("fontColor must be a string")
+		}
+	}
+
+	return p, nil
+}
+
+func parseMarkdownLinks(config interface{}) (*MarkdownLinks, error) {
+	configMap, ok := config.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("markdown-links config must be an object")
+	}
+
+	p := &MarkdownLinks{}
+	if nameColor, ok := configMap["nameColor"]; ok {
+		p.NameColor, ok = nameColor.(string)
+		if !ok {
+			return nil, fmt.Errorf("nameColor must be a string")
+		}
+	}
+	if linkColor, ok := configMap["linkColor"]; ok {
+		p.LinkColor, ok = linkColor.(string)
+		if !ok {
+			return nil, fmt.Errorf("linkColor must be a string")
 		}
 	}
 

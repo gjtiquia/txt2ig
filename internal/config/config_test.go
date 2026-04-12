@@ -113,8 +113,8 @@ func TestDefaultConfig_FromEmbeddedFile(t *testing.T) {
 	}
 
 	// Verify postProcessors from embedded config
-	if len(cfg.PostProcessors) != 2 {
-		t.Errorf("DefaultConfig PostProcessors should have 2 items, got %d", len(cfg.PostProcessors))
+	if len(cfg.PostProcessors) != 3 {
+		t.Errorf("DefaultConfig PostProcessors should have 3 items, got %d", len(cfg.PostProcessors))
 	}
 }
 
@@ -133,7 +133,7 @@ func TestDefaultConfigContent_ReturnsValidJSONC(t *testing.T) {
 		t.Errorf("Parsed config FontSize = %d, want 32", cfg.FontSize)
 	}
 
-	if len(cfg.PostProcessors) != 2 {
-		t.Errorf("Parsed config PostProcessors should have 2 items, got %d", len(cfg.PostProcessors))
+	if len(cfg.PostProcessors) != 3 {
+		t.Errorf("Parsed config PostProcessors should have 3 items, got %d", len(cfg.PostProcessors))
 	}
 }

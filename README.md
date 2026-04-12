@@ -175,6 +175,14 @@ feel free to copy and paste this to your own config and override what you need
             }
         },
 
+        {
+            // styles markdown links [name](url) with separate colors
+            "markdown-links": {
+                "nameColor": "#3B82F6",  // blue for [name]
+                "linkColor": "#60A5FA"   // lighter blue for (url)
+            }
+        },
+
         // {
         //      // lines starting with # will be italic and different color
         //     "bash-comments": {

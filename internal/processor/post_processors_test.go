@@ -185,7 +185,7 @@ func TestMarkdownLinks_BasicLink(t *testing.T) {
 	}
 
 	segs := result[0].Segments
-	expectedText := "Check out my bloghttps://example.com for more"
+	expectedText := "Check out [my blog](https://example.com) for more"
 	actualText := ""
 	for _, s := range segs {
 		actualText += s.Text
@@ -194,7 +194,7 @@ func TestMarkdownLinks_BasicLink(t *testing.T) {
 		t.Errorf("Text = %q, want %q", actualText, expectedText)
 	}
 
-	nameSeg := segs[1]
+	nameSeg := segs[2]
 	if nameSeg.Text != "my blog" {
 		t.Errorf("Name segment text = %q, want %q", nameSeg.Text, "my blog")
 	}
@@ -202,7 +202,7 @@ func TestMarkdownLinks_BasicLink(t *testing.T) {
 		t.Errorf("Name segment color = %v, want #3B82F6", nameSeg.Style)
 	}
 
-	urlSeg := segs[2]
+	urlSeg := segs[4]
 	if urlSeg.Text != "https://example.com" {
 		t.Errorf("URL segment text = %q, want %q", urlSeg.Text, "https://example.com")
 	}
@@ -228,22 +228,22 @@ func TestMarkdownLinks_MultipleLinks(t *testing.T) {
 
 	segs := result[0].Segments
 
-	if len(segs) < 6 {
-		t.Fatalf("Expected at least 6 segments, got %d", len(segs))
+	if len(segs) < 10 {
+		t.Fatalf("Expected at least 10 segments, got %d", len(segs))
 	}
 
-	if segs[1].Text != "link1" {
-		t.Errorf("First link name = %q, want %q", segs[1].Text, "link1")
+	if segs[2].Text != "link1" {
+		t.Errorf("First link name = %q, want %q", segs[2].Text, "link1")
 	}
-	if segs[1].Style == nil || segs[1].Style.FontColor != "#3B82F6" {
-		t.Errorf("First link name color = %v, want #3B82F6", segs[1].Style)
+	if segs[2].Style == nil || segs[2].Style.FontColor != "#3B82F6" {
+		t.Errorf("First link name color = %v, want #3B82F6", segs[2].Style)
 	}
 
-	if segs[2].Text != "url1" {
-		t.Errorf("First link URL = %q, want %q", segs[2].Text, "url1")
+	if segs[4].Text != "url1" {
+		t.Errorf("First link URL = %q, want %q", segs[4].Text, "url1")
 	}
-	if segs[2].Style == nil || segs[2].Style.FontColor != "#60A5FA" {
-		t.Errorf("First link URL color = %v, want #60A5FA", segs[2].Style)
+	if segs[4].Style == nil || segs[4].Style.FontColor != "#60A5FA" {
+		t.Errorf("First link URL color = %v, want #60A5FA", segs[4].Style)
 	}
 }
 
@@ -308,7 +308,7 @@ func TestMarkdownLinks_OnlyNameColor(t *testing.T) {
 		t.Fatalf("ProcessLines() error: %v", err)
 	}
 
-	nameSeg := result[0].Segments[0]
+	nameSeg := result[0].Segments[1]
 	if nameSeg.Text != "name" {
 		t.Errorf("Name text = %q, want %q", nameSeg.Text, "name")
 	}
@@ -316,7 +316,7 @@ func TestMarkdownLinks_OnlyNameColor(t *testing.T) {
 		t.Errorf("Name color = %v, want #3B82F6", nameSeg.Style)
 	}
 
-	urlSeg := result[0].Segments[1]
+	urlSeg := result[0].Segments[3]
 	if urlSeg.Text != "url" {
 		t.Errorf("URL text = %q, want %q", urlSeg.Text, "url")
 	}
@@ -340,7 +340,7 @@ func TestMarkdownLinks_OnlyLinkColor(t *testing.T) {
 		t.Fatalf("ProcessLines() error: %v", err)
 	}
 
-	nameSeg := result[0].Segments[0]
+	nameSeg := result[0].Segments[1]
 	if nameSeg.Text != "name" {
 		t.Errorf("Name text = %q, want %q", nameSeg.Text, "name")
 	}
@@ -348,7 +348,7 @@ func TestMarkdownLinks_OnlyLinkColor(t *testing.T) {
 		t.Errorf("Name should not have color, got %s", nameSeg.Style.FontColor)
 	}
 
-	urlSeg := result[0].Segments[1]
+	urlSeg := result[0].Segments[3]
 	if urlSeg.Text != "url" {
 		t.Errorf("URL text = %q, want %q", urlSeg.Text, "url")
 	}
@@ -377,7 +377,7 @@ func TestMarkdownLinks_MergeWithExistingStyles(t *testing.T) {
 		t.Fatalf("ProcessLines() error: %v", err)
 	}
 
-	nameSeg := result[0].Segments[1]
+	nameSeg := result[0].Segments[2]
 	if nameSeg.Text != "my blog" {
 		t.Errorf("Name text = %q, want %q", nameSeg.Text, "my blog")
 	}
@@ -412,7 +412,7 @@ func TestMarkdownLinks_EmptyBrackets(t *testing.T) {
 	for _, s := range result[0].Segments {
 		actualText += s.Text
 	}
-	expectedText := "Empty:  here"
+	expectedText := "Empty: []() here"
 	if actualText != expectedText {
 		t.Errorf("Text = %q, want %q", actualText, expectedText)
 	}
@@ -433,8 +433,8 @@ func TestMarkdownLinks_LinkAtStart(t *testing.T) {
 		t.Fatalf("ProcessLines() error: %v", err)
 	}
 
-	if result[0].Segments[0].Text != "start" {
-		t.Errorf("First segment = %q, want %q", result[0].Segments[0].Text, "start")
+	if result[0].Segments[1].Text != "start" {
+		t.Errorf("Name segment = %q, want %q", result[0].Segments[1].Text, "start")
 	}
 }
 
@@ -453,8 +453,25 @@ func TestMarkdownLinks_LinkAtEnd(t *testing.T) {
 		t.Fatalf("ProcessLines() error: %v", err)
 	}
 
-	lastSeg := result[0].Segments[len(result[0].Segments)-1]
-	if lastSeg.Text != "url2" {
-		t.Errorf("Last segment = %q, want %q", lastSeg.Text, "url2")
+	actualText := ""
+	for _, s := range result[0].Segments {
+		actualText += s.Text
+	}
+	expectedText := "middle [end](url2)"
+	if actualText != expectedText {
+		t.Errorf("Text = %q, want %q", actualText, expectedText)
+	}
+
+	found := false
+	for _, seg := range result[0].Segments {
+		if seg.Text == "url2" {
+			found = true
+			if seg.Style == nil || seg.Style.FontColor != "#60A5FA" {
+				t.Errorf("URL color = %v, want #60A5FA", seg.Style)
+			}
+		}
+	}
+	if !found {
+		t.Error("URL segment 'url2' not found")
 	}
 }

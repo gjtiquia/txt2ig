@@ -94,6 +94,11 @@ func (p *MarkdownLinks) ProcessLines(lines []StyledLine) ([]StyledLine, error) {
 				})
 			}
 
+			segments = append(segments, StyledSegment{
+				Text:  "[",
+				Style: nil,
+			})
+
 			if name != "" {
 				nameStyle := getStyleAtPosition(line, nameStart)
 				if p.NameColor != "" {
@@ -111,6 +116,11 @@ func (p *MarkdownLinks) ProcessLines(lines []StyledLine) ([]StyledLine, error) {
 				})
 			}
 
+			segments = append(segments, StyledSegment{
+				Text:  "](",
+				Style: nil,
+			})
+
 			if url != "" {
 				urlStyle := getStyleAtPosition(line, urlStart)
 				if p.LinkColor != "" {
@@ -127,6 +137,11 @@ func (p *MarkdownLinks) ProcessLines(lines []StyledLine) ([]StyledLine, error) {
 					Style: urlStyle,
 				})
 			}
+
+			segments = append(segments, StyledSegment{
+				Text:  ")",
+				Style: nil,
+			})
 
 			lastEnd = fullEnd
 		}

@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/alecthomas/chroma/v2"
@@ -127,4 +128,36 @@ func (p *BashCodeHighlighter) chromaEntryToTextStyle(entry chroma.StyleEntry) *T
 	}
 
 	return ts
+}
+
+func parseBashCodeHighlighting(config interface{}) (PostProcessor, error) {
+	configMap, ok := config.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("bash-code-highlighting config must be an object")
+	}
+
+	p := &BashCodeHighlighter{
+		StyleName:    "monokai",
+		DefaultColor: "#FFFFFF",
+	}
+
+	if style, ok := configMap["style"]; ok {
+		p.StyleName, ok = style.(string)
+		if !ok {
+			return nil, fmt.Errorf("style must be a string")
+		}
+	}
+
+	if defaultColor, ok := configMap["defaultColor"]; ok {
+		p.DefaultColor, ok = defaultColor.(string)
+		if !ok {
+			return nil, fmt.Errorf("defaultColor must be a string")
+		}
+	}
+
+	return p, nil
+}
+
+func init() {
+	RegisterPostProcessorParser("bash-code-highlighting", parseBashCodeHighlighting)
 }

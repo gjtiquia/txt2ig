@@ -1,51 +1,11 @@
 package processor
 
 import (
+	"fmt"
 	"regexp"
-	"strings"
 )
 
 var linkRegex = regexp.MustCompile(`\[([^\]]*)\]\(([^\)]*)\)`)
-
-type MarkdownBoldHeaders struct {
-	Bold      bool   `json:"bold"`
-	FontColor string `json:"fontColor"`
-}
-
-func (p *MarkdownBoldHeaders) Process(line string) (string, *TextStyle, error) {
-	if strings.HasPrefix(line, "#") {
-		style := &TextStyle{
-			Bold:      p.Bold,
-			FontColor: p.FontColor,
-		}
-		return line, style, nil
-	}
-	return line, nil, nil
-}
-
-func (p *MarkdownBoldHeaders) Name() string {
-	return "markdown-bold-headers"
-}
-
-type BashComments struct {
-	Italic    bool   `json:"italic"`
-	FontColor string `json:"fontColor"`
-}
-
-func (p *BashComments) Process(line string) (string, *TextStyle, error) {
-	if strings.HasPrefix(line, "#") {
-		style := &TextStyle{
-			Italic:    p.Italic,
-			FontColor: p.FontColor,
-		}
-		return line, style, nil
-	}
-	return line, nil, nil
-}
-
-func (p *BashComments) Name() string {
-	return "bash-comments"
-}
 
 type MarkdownLinks struct {
 	NameColor string `json:"nameColor"`
@@ -170,4 +130,31 @@ func getStyleAtPosition(line StyledLine, pos int) *TextStyle {
 		currentPos = segEnd
 	}
 	return nil
+}
+
+func parseMarkdownLinks(config interface{}) (PostProcessor, error) {
+	configMap, ok := config.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("markdown-links config must be an object")
+	}
+
+	p := &MarkdownLinks{}
+	if nameColor, ok := configMap["nameColor"]; ok {
+		p.NameColor, ok = nameColor.(string)
+		if !ok {
+			return nil, fmt.Errorf("nameColor must be a string")
+		}
+	}
+	if linkColor, ok := configMap["linkColor"]; ok {
+		p.LinkColor, ok = linkColor.(string)
+		if !ok {
+			return nil, fmt.Errorf("linkColor must be a string")
+		}
+	}
+
+	return p, nil
+}
+
+func init() {
+	RegisterPostProcessorParser("markdown-links", parseMarkdownLinks)
 }

@@ -52,3 +52,54 @@ func formatInt(n int, width int) string {
 	}
 	return s
 }
+
+func parseExactSearchAndReplace(config interface{}) (PreProcessor, error) {
+	configMap, ok := config.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("exactSearchAndReplace config must be an object")
+	}
+
+	p := &ExactSearchAndReplace{}
+	if search, ok := configMap["searchString"]; ok {
+		p.SearchString, ok = search.(string)
+		if !ok {
+			return nil, fmt.Errorf("searchString must be a string")
+		}
+	}
+	if replace, ok := configMap["replaceString"]; ok {
+		p.ReplaceString, ok = replace.(string)
+		if !ok {
+			return nil, fmt.Errorf("replaceString must be a string")
+		}
+	}
+
+	return p, nil
+}
+
+func parseExactSearchAndReplaceWithDateTimeNow(config interface{}) (PreProcessor, error) {
+	configMap, ok := config.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("exactSearchAndReplaceWithDateTimeNow config must be an object")
+	}
+
+	p := &ExactSearchAndReplaceWithDateTimeNow{}
+	if search, ok := configMap["searchString"]; ok {
+		p.SearchString, ok = search.(string)
+		if !ok {
+			return nil, fmt.Errorf("searchString must be a string")
+		}
+	}
+	if format, ok := configMap["replaceFormat"]; ok {
+		p.ReplaceFormat, ok = format.(string)
+		if !ok {
+			return nil, fmt.Errorf("replaceFormat must be a string")
+		}
+	}
+
+	return p, nil
+}
+
+func init() {
+	RegisterPreProcessorParser("exactSearchAndReplace", parseExactSearchAndReplace)
+	RegisterPreProcessorParser("exactSearchAndReplaceWithDateTimeNow", parseExactSearchAndReplaceWithDateTimeNow)
+}

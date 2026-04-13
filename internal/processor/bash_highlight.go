@@ -14,10 +14,6 @@ type BashCodeHighlighter struct {
 	DefaultColor string
 }
 
-func (p *BashCodeHighlighter) Process(line string) (string, *TextStyle, error) {
-	return line, nil, nil
-}
-
 func (p *BashCodeHighlighter) Name() string {
 	return "bash-code-highlighting"
 }

@@ -136,21 +136,6 @@ func TestBashCodeHighlighter_Name(t *testing.T) {
 	}
 }
 
-func TestBashCodeHighlighter_Process(t *testing.T) {
-	p := &BashCodeHighlighter{}
-	line := "test"
-	result, style, err := p.Process(line)
-	if err != nil {
-		t.Fatalf("Process() error = %v", err)
-	}
-	if result != line {
-		t.Errorf("Process() = %q, expected %q", result, line)
-	}
-	if style != nil {
-		t.Errorf("Process() style = %v, expected nil", style)
-	}
-}
-
 func TestParseBashCodeHighlighting(t *testing.T) {
 	tests := []struct {
 		name    string

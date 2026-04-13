@@ -10,15 +10,22 @@ type BashComments struct {
 	FontColor string `json:"fontColor"`
 }
 
-func (p *BashComments) Process(line string) (string, *TextStyle, error) {
-	if strings.HasPrefix(line, "#") {
-		style := &TextStyle{
-			Italic:    p.Italic,
-			FontColor: p.FontColor,
+func (p *BashComments) ProcessLines(lines []StyledLine) ([]StyledLine, error) {
+	result := make([]StyledLine, len(lines))
+	for i, line := range lines {
+		text := StyledSegmentsToText(line.Segments)
+		if strings.HasPrefix(text, "#") {
+			style := &TextStyle{
+				Italic:    p.Italic,
+				FontColor: p.FontColor,
+			}
+			for j := range line.Segments {
+				line.Segments[j].Style = mergeStyles(line.Segments[j].Style, style)
+			}
 		}
-		return line, style, nil
+		result[i] = line
 	}
-	return line, nil, nil
+	return result, nil
 }
 
 func (p *BashComments) Name() string {

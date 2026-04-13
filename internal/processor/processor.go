@@ -50,52 +50,13 @@ func ApplyPostProcessors(lines []string, configs []interface{}) ([]StyledLine, e
 	}
 
 	for _, p := range processors {
-		if sp, ok := p.(StatefulPostProcessor); ok {
-			result, err = sp.ProcessLines(result)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	for i := range result {
-		if HasStyledSegments(result[i]) {
-			continue
-		}
-
-		var currentStyle *TextStyle
-		lineText := StyledSegmentsToText(result[i].Segments)
-
-		for _, p := range processors {
-			if _, ok := p.(StatefulPostProcessor); ok {
-				continue
-			}
-
-			var style *TextStyle
-			lineText, style, err = p.Process(lineText)
-			if err != nil {
-				return nil, fmt.Errorf("apply post-processor: %w", err)
-			}
-			if style != nil {
-				currentStyle = mergeStyles(currentStyle, style)
-			}
-		}
-
-		if currentStyle != nil {
-			for j := range result[i].Segments {
-				result[i].Segments[j].Style = mergeStyles(result[i].Segments[j].Style, currentStyle)
-			}
+		result, err = p.ProcessLines(result)
+		if err != nil {
+			return nil, err
 		}
 	}
 
 	return result, nil
-}
-
-func hasNonDefaultStyle(style *TextStyle) bool {
-	if style == nil {
-		return false
-	}
-	return style.FontColor != "" || style.Bold || style.Italic || style.Underline || style.Size != nil
 }
 
 func mergeStyles(base, override *TextStyle) *TextStyle {

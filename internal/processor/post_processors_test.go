@@ -19,7 +19,7 @@ func TestMarkdownBoldHeaders(t *testing.T) {
 			bold:          true,
 			fontColor:     "#FF0000",
 			input:         "# Title",
-			expectedLine:  "# Title", // # is kept
+			expectedLine:  "# Title",
 			expectedBold:  true,
 			expectedColor: "#FF0000",
 		},
@@ -28,7 +28,7 @@ func TestMarkdownBoldHeaders(t *testing.T) {
 			bold:          true,
 			fontColor:     "",
 			input:         "## Heading",
-			expectedLine:  "## Heading", // # is kept
+			expectedLine:  "## Heading",
 			expectedBold:  true,
 			expectedColor: "",
 		},
@@ -37,7 +37,7 @@ func TestMarkdownBoldHeaders(t *testing.T) {
 			bold:          false,
 			fontColor:     "#00FF00",
 			input:         "### Subheading",
-			expectedLine:  "### Subheading", // # is kept
+			expectedLine:  "### Subheading",
 			expectedBold:  false,
 			expectedColor: "#00FF00",
 		},
@@ -55,7 +55,7 @@ func TestMarkdownBoldHeaders(t *testing.T) {
 			bold:          true,
 			fontColor:     "",
 			input:         "#   Heading with spaces",
-			expectedLine:  "#   Heading with spaces", // # is kept
+			expectedLine:  "#   Heading with spaces",
 			expectedBold:  true,
 			expectedColor: "",
 		},
@@ -76,23 +76,35 @@ func TestMarkdownBoldHeaders(t *testing.T) {
 				Bold:      tt.bold,
 				FontColor: tt.fontColor,
 			}
-			line, style, err := p.Process(tt.input)
+			lines := []StyledLine{PlainText(tt.input)}
+			result, err := p.ProcessLines(lines)
 			if err != nil {
-				t.Errorf("Process() unexpected error: %v", err)
+				t.Errorf("ProcessLines() unexpected error: %v", err)
 				return
 			}
-			if line != tt.expectedLine {
-				t.Errorf("Process() line = %q, want %q", line, tt.expectedLine)
+			if len(result) != 1 {
+				t.Errorf("ProcessLines() returned %d lines, want 1", len(result))
+				return
 			}
-			if style != nil {
-				if style.Bold != tt.expectedBold {
-					t.Errorf("Style.Bold = %v, want %v", style.Bold, tt.expectedBold)
+
+			actualText := StyledSegmentsToText(result[0].Segments)
+			if actualText != tt.expectedLine {
+				t.Errorf("ProcessLines() text = %q, want %q", actualText, tt.expectedLine)
+			}
+
+			if tt.expectedBold || tt.expectedColor != "" {
+				for _, seg := range result[0].Segments {
+					if seg.Style != nil {
+						if seg.Style.Bold != tt.expectedBold {
+							t.Errorf("Style.Bold = %v, want %v", seg.Style.Bold, tt.expectedBold)
+						}
+						if seg.Style.FontColor != tt.expectedColor {
+							t.Errorf("Style.FontColor = %q, want %q", seg.Style.FontColor, tt.expectedColor)
+						}
+						return
+					}
 				}
-				if style.FontColor != tt.expectedColor {
-					t.Errorf("Style.FontColor = %q, want %q", style.FontColor, tt.expectedColor)
-				}
-			} else if tt.expectedBold || tt.expectedColor != "" {
-				t.Errorf("Style is nil, expected non-nil")
+				t.Errorf("No segment has style, expected styled segments")
 			}
 		})
 	}
@@ -113,7 +125,7 @@ func TestBashComments(t *testing.T) {
 			italic:         true,
 			fontColor:      "#888888",
 			input:          "# This is a comment",
-			expectedLine:   "# This is a comment", // Bash comments preserve the #
+			expectedLine:   "# This is a comment",
 			expectedItalic: true,
 			expectedColor:  "#888888",
 		},
@@ -143,23 +155,35 @@ func TestBashComments(t *testing.T) {
 				Italic:    tt.italic,
 				FontColor: tt.fontColor,
 			}
-			line, style, err := p.Process(tt.input)
+			lines := []StyledLine{PlainText(tt.input)}
+			result, err := p.ProcessLines(lines)
 			if err != nil {
-				t.Errorf("Process() unexpected error: %v", err)
+				t.Errorf("ProcessLines() unexpected error: %v", err)
 				return
 			}
-			if line != tt.expectedLine {
-				t.Errorf("Process() line = %q, want %q", line, tt.expectedLine)
+			if len(result) != 1 {
+				t.Errorf("ProcessLines() returned %d lines, want 1", len(result))
+				return
 			}
-			if style != nil {
-				if style.Italic != tt.expectedItalic {
-					t.Errorf("Style.Italic = %v, want %v", style.Italic, tt.expectedItalic)
+
+			actualText := StyledSegmentsToText(result[0].Segments)
+			if actualText != tt.expectedLine {
+				t.Errorf("ProcessLines() text = %q, want %q", actualText, tt.expectedLine)
+			}
+
+			if tt.expectedItalic || tt.expectedColor != "" {
+				for _, seg := range result[0].Segments {
+					if seg.Style != nil {
+						if seg.Style.Italic != tt.expectedItalic {
+							t.Errorf("Style.Italic = %v, want %v", seg.Style.Italic, tt.expectedItalic)
+						}
+						if seg.Style.FontColor != tt.expectedColor {
+							t.Errorf("Style.FontColor = %q, want %q", seg.Style.FontColor, tt.expectedColor)
+						}
+						return
+					}
 				}
-				if style.FontColor != tt.expectedColor {
-					t.Errorf("Style.FontColor = %q, want %q", style.FontColor, tt.expectedColor)
-				}
-			} else if tt.expectedItalic || tt.expectedColor != "" {
-				t.Errorf("Style is nil, expected non-nil")
+				t.Errorf("No segment has style, expected styled segments")
 			}
 		})
 	}

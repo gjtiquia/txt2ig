@@ -12,10 +12,6 @@ type MarkdownLinks struct {
 	LinkColor string `json:"linkColor"`
 }
 
-func (p *MarkdownLinks) Process(line string) (string, *TextStyle, error) {
-	return line, nil, nil
-}
-
 func (p *MarkdownLinks) Name() string {
 	return "markdown-links"
 }
